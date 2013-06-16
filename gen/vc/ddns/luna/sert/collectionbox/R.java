@@ -10,6 +10,9 @@ package vc.ddns.luna.sert.collectionbox;
 public final class R {
     public static final class attr {
     }
+    public static final class color {
+        public static final int dialog_bgColor=0x7f070000;
+    }
     public static final class dimen {
         /**  Default screen margins, per the Android Design guidelines. 
 
@@ -37,35 +40,38 @@ public final class R {
         public static final int test=0x7f02000d;
     }
     public static final class id {
-        public static final int action_settings=0x7f080016;
-        public static final int boxImage0=0x7f080005;
-        public static final int boxImage1=0x7f080006;
-        public static final int boxImage2=0x7f08000b;
-        public static final int boxImage3=0x7f08000c;
-        public static final int boxImage4=0x7f080011;
-        public static final int boxImage5=0x7f080012;
-        public static final int boxTitle0=0x7f080008;
-        public static final int boxTitle1=0x7f080009;
-        public static final int boxTitle2=0x7f08000e;
-        public static final int boxTitle3=0x7f08000f;
-        public static final int boxTitle4=0x7f080014;
-        public static final int boxTitle5=0x7f080015;
-        public static final int deleteButton=0x7f080003;
-        public static final int imageView1=0x7f080000;
-        public static final int linearLayout1=0x7f080001;
-        public static final int newButton=0x7f080002;
-        public static final int tableRow1=0x7f080004;
-        public static final int tableRow2=0x7f080007;
-        public static final int tableRow3=0x7f08000a;
-        public static final int tableRow4=0x7f08000d;
-        public static final int tableRow5=0x7f080010;
-        public static final int tableRow6=0x7f080013;
+        public static final int action_settings=0x7f090018;
+        public static final int boxImage0=0x7f090005;
+        public static final int boxImage1=0x7f090006;
+        public static final int boxImage2=0x7f09000b;
+        public static final int boxImage3=0x7f09000c;
+        public static final int boxImage4=0x7f090011;
+        public static final int boxImage5=0x7f090012;
+        public static final int boxTitle0=0x7f090008;
+        public static final int boxTitle1=0x7f090009;
+        public static final int boxTitle2=0x7f09000e;
+        public static final int boxTitle3=0x7f09000f;
+        public static final int boxTitle4=0x7f090014;
+        public static final int boxTitle5=0x7f090015;
+        public static final int deleteButton=0x7f090003;
+        public static final int editText1=0x7f090017;
+        public static final int imageView1=0x7f090000;
+        public static final int linearLayout1=0x7f090001;
+        public static final int newButton=0x7f090002;
+        public static final int tableRow1=0x7f090004;
+        public static final int tableRow2=0x7f090007;
+        public static final int tableRow3=0x7f09000a;
+        public static final int tableRow4=0x7f09000d;
+        public static final int tableRow5=0x7f090010;
+        public static final int tableRow6=0x7f090013;
+        public static final int textView1=0x7f090016;
     }
     public static final class layout {
         public static final int activity_main=0x7f030000;
+        public static final int new_dialog=0x7f030001;
     }
     public static final class menu {
-        public static final int main=0x7f070000;
+        public static final int main=0x7f080000;
     }
     public static final class string {
         public static final int action_settings=0x7f050001;

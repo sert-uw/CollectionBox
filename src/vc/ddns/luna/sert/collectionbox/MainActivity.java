@@ -3,8 +3,11 @@ package vc.ddns.luna.sert.collectionbox;
 import java.util.StringTokenizer;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -47,6 +50,7 @@ public class MainActivity extends Activity implements OnClickListener {
 					.getIdentifier("boxTitle" + i, "id", this.getPackageName()))));
 		}
 
+		//SQLiteオブジェクト及びデータベースオブジェクトの生成
 		sql = new MySQLite(this);
 		db = sql.getWritableDatabase();
 
@@ -73,13 +77,17 @@ public class MainActivity extends Activity implements OnClickListener {
 		}
 	}
 
+	//クリックイベント処理
 	@Override
 	public void onClick(View v) {
 		String tag = v.getTag().toString();
 
 		if (tag.equals("new")) {
-			sql.createNewBox(db, "test", "  ");
-			reSet();
+			//sql.createNewBox(db, "test", "  ");
+			//reSet();
+			LayoutInflater inflater = LayoutInflater.from(this);
+			createDialog("New", inflater.inflate(R.layout.new_dialog, null),
+					"create", "cansel", null, null);
 
 		} else if (tag.equals("delete")) {
 			deleteFlag = true;
@@ -93,6 +101,19 @@ public class MainActivity extends Activity implements OnClickListener {
 				reSet();
 			}
 		}
+	}
+
+	//ダイアログの表示
+	private void createDialog(String title, View view,
+			String ptext, String ntext,
+			DialogInterface.OnClickListener plistener,
+			DialogInterface.OnClickListener nlistener){
+		AlertDialog.Builder ad = new AlertDialog.Builder(this);
+		ad.setTitle(title);
+		ad.setView(view);
+		ad.setPositiveButton(ptext, plistener);
+		ad.setNeutralButton(ntext, nlistener);
+		ad.show();
 	}
 
 }
