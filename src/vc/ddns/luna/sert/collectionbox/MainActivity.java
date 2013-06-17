@@ -17,12 +17,13 @@ import android.widget.TextView;
 
 public class MainActivity extends Activity implements OnClickListener {
 
-	private ImageView[] imView = new ImageView[6];
-	private TextView[] textView = new TextView[6];
-	private boolean deleteFlag;
+	private ImageView[]		imView = new ImageView[6];	//ボックスイメージ一覧
+	private TextView[]		textView = new TextView[6];	//ボックス名一覧
+	private boolean			deleteFlag;					//Deleteモードのフラグ
+	private TextView		delNotif;					//Deleteモードの通知用View
 
-	private MySQLite sql;
-	private SQLiteDatabase db;
+	private MySQLite		sql;						//SQLiteオブジェクト
+	private SQLiteDatabase	db;							//データベースオブジェクト
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -41,9 +42,13 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	//初期化処理
 	private void init() {
+		//ボタンにイベントリスナーを登録
 		findViewById(R.id.newButton).setOnClickListener(this);
 		findViewById(R.id.deleteButton).setOnClickListener(this);
+		//Deleteモード通知用Viewの所得
+		delNotif = (TextView)findViewById(R.id.delete_notification);
 
+		//ImageViewとTextViewのオブジェクトを取得
 		for (int i = 0; i < 6; i++) {
 			imView[i] = (ImageView) (findViewById((getResources()
 					.getIdentifier("boxImage" + i, "id", this.getPackageName()))));
@@ -55,6 +60,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		sql = new MySQLite(this);
 		db = sql.getWritableDatabase();
 
+		//レイアウトへ表示させる
 		reSet();
 	}
 
@@ -63,11 +69,14 @@ public class MainActivity extends Activity implements OnClickListener {
 		String[] data = sql.searchByProject(db);
 		StringTokenizer st;
 
+		//読み込んだデータを適応する
 		for (int i = 0; i < textView.length; i++) {
+			//データが空ならダミー(透明画像、スペース文字)を表示する
 			if (i >= data.length) {
 				textView[i].setText(" ");
 				imView[i].setImageResource(R.drawable.dummy);
 			} else {
+				//データからボックス名とイメージ画像を読み込む
 				st = new StringTokenizer(data[i], ",");
 				st.nextToken();
 				textView[i].setText(st.nextToken());
@@ -84,6 +93,10 @@ public class MainActivity extends Activity implements OnClickListener {
 		String tag = v.getTag().toString();
 
 		if (tag.equals("new")) {
+			//Deleteモードならば解除する
+			if(deleteFlag)
+				changeDelNotif();
+
 			//new_dialog用のレイアウトを読み込む
 			LayoutInflater inflater = LayoutInflater.from(this);
 			//layoutをviewに変換する
@@ -92,7 +105,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			final EditText edit = (EditText)layoutView.findViewById(R.id.new_dialog_edit);
 			//ダイアログの生成
 			createDialog("New", layoutView,
-					"create", "cansel",
+					"Create", "Cansel",
 					new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
@@ -110,26 +123,32 @@ public class MainActivity extends Activity implements OnClickListener {
 			});
 
 		} else if (tag.equals("delete")) {
-			deleteFlag = true;
+			//Deleteモードの変更
+			changeDelNotif();
 
 		} else {
+			//ImageViewのクリック処理
 			if (tag.substring(0, 6).equals("imView") && deleteFlag) {
-				/*sql.deleteEntry(db, "allBox", "title = ?",
-						new String[] { textView[Integer.parseInt(
-								tag.replaceAll("[^0-9]", ""))]
-								.getText().toString() });
-				reSet();*/
+				//Dialogに表示するTextViewの生成
 				TextView text = new TextView(this);
-				text.setText(textView[Integer.parseInt(
-						tag.replaceAll("[^0-9]", ""))]
-						.getText().toString() + "を削除しますか？");
-				createDialog("Delete", text, "Delete", "cansel",
+				//Dialogのクリックイベントから参照するボックス名を保持
+				final String title = textView[Integer.parseInt(
+						tag.replaceAll("[^0-9]", ""))].getText().toString();
+				//TextViewのパラメータ決定
+				text.setText(title + "を削除しますか？");
+				//ダイアログの生成
+				createDialog("Delete", text, "Delete", "Cansel",
 						new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
 						if (which == DialogInterface.BUTTON_POSITIVE) {
-
+							//データベースから削除する
+							sql.deleteEntry(db, "allBox", "title = ?",
+									new String[] { title });
+							reSet();
 						}
+						//最後にDeleteモードを解除する
+						changeDelNotif();
 					}
 				});
 			}
@@ -137,6 +156,10 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 
 	//ダイアログの表示
+	/*title:Dialogのタイトル        view:Dialogに埋め込むView
+	  ptext:Positiveボタンの文字列  ntext:Negativeボタンの文字列
+	  listener:ボタンのイベントリスナー
+	*/
 	private void createDialog(String title, View view,
 			String ptext, String ntext,
 			DialogInterface.OnClickListener listener) {
@@ -144,8 +167,21 @@ public class MainActivity extends Activity implements OnClickListener {
 		ad.setTitle(title);
 		ad.setView(view);
 		ad.setPositiveButton(ptext, listener);
-		ad.setNeutralButton(ntext, listener);
+		ad.setNegativeButton(ntext, listener);
 		ad.show();
 	}
 
+	//Deleteモード通知TextViewの更新
+	private void changeDelNotif(){
+		//フラグのONと通知設定
+		if(!deleteFlag){
+			deleteFlag = true;
+			delNotif.setText("Touch and delete");
+		}
+		//フラグのOFFと通知解除
+		else {
+			deleteFlag = false;
+			delNotif.setText("");
+		}
+	}
 }
