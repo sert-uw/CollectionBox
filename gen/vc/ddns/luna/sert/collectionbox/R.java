@@ -40,7 +40,7 @@ public final class R {
         public static final int test=0x7f02000d;
     }
     public static final class id {
-        public static final int action_settings=0x7f090018;
+        public static final int action_settings=0x7f090017;
         public static final int boxImage0=0x7f090005;
         public static final int boxImage1=0x7f090006;
         public static final int boxImage2=0x7f09000b;
@@ -54,17 +54,16 @@ public final class R {
         public static final int boxTitle4=0x7f090014;
         public static final int boxTitle5=0x7f090015;
         public static final int deleteButton=0x7f090003;
-        public static final int editText1=0x7f090017;
         public static final int imageView1=0x7f090000;
         public static final int linearLayout1=0x7f090001;
         public static final int newButton=0x7f090002;
+        public static final int new_dialog_edit=0x7f090016;
         public static final int tableRow1=0x7f090004;
         public static final int tableRow2=0x7f090007;
         public static final int tableRow3=0x7f09000a;
         public static final int tableRow4=0x7f09000d;
         public static final int tableRow5=0x7f090010;
         public static final int tableRow6=0x7f090013;
-        public static final int textView1=0x7f090016;
     }
     public static final class layout {
         public static final int activity_main=0x7f030000;

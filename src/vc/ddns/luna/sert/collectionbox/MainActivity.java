@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -83,22 +84,54 @@ public class MainActivity extends Activity implements OnClickListener {
 		String tag = v.getTag().toString();
 
 		if (tag.equals("new")) {
-			//sql.createNewBox(db, "test", "  ");
-			//reSet();
+			//new_dialog用のレイアウトを読み込む
 			LayoutInflater inflater = LayoutInflater.from(this);
-			createDialog("New", inflater.inflate(R.layout.new_dialog, null),
-					"create", "cansel", null, null);
+			//layoutをviewに変換する
+			View layoutView = inflater.inflate(R.layout.new_dialog, null);
+			//EditTextをIDで読み込み、クリックイベントで参照できるようにfinal修飾子をつける
+			final EditText edit = (EditText)layoutView.findViewById(R.id.new_dialog_edit);
+			//ダイアログの生成
+			createDialog("New", layoutView,
+					"create", "cansel",
+					new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							//Positiveボタンが押された場合
+							if (which == DialogInterface.BUTTON_POSITIVE) {
+								//EditTextの文字列取得
+								String str = edit.getText().toString();
+								if(!str.equals("")){
+									//データベースへ登録
+									sql.createNewBox(db, str, "  ");
+									reSet();
+								}
+							}
+						}
+			});
 
 		} else if (tag.equals("delete")) {
 			deleteFlag = true;
 
 		} else {
 			if (tag.substring(0, 6).equals("imView") && deleteFlag) {
-				sql.deleteEntry(db, "allBox", "title = ?",
+				/*sql.deleteEntry(db, "allBox", "title = ?",
 						new String[] { textView[Integer.parseInt(
 								tag.replaceAll("[^0-9]", ""))]
 								.getText().toString() });
-				reSet();
+				reSet();*/
+				TextView text = new TextView(this);
+				text.setText(textView[Integer.parseInt(
+						tag.replaceAll("[^0-9]", ""))]
+						.getText().toString() + "を削除しますか？");
+				createDialog("Delete", text, "Delete", "cansel",
+						new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						if (which == DialogInterface.BUTTON_POSITIVE) {
+
+						}
+					}
+				});
 			}
 		}
 	}
@@ -106,13 +139,12 @@ public class MainActivity extends Activity implements OnClickListener {
 	//ダイアログの表示
 	private void createDialog(String title, View view,
 			String ptext, String ntext,
-			DialogInterface.OnClickListener plistener,
-			DialogInterface.OnClickListener nlistener){
+			DialogInterface.OnClickListener listener) {
 		AlertDialog.Builder ad = new AlertDialog.Builder(this);
 		ad.setTitle(title);
 		ad.setView(view);
-		ad.setPositiveButton(ptext, plistener);
-		ad.setNeutralButton(ntext, nlistener);
+		ad.setPositiveButton(ptext, listener);
+		ad.setNeutralButton(ntext, listener);
 		ad.show();
 	}
 
