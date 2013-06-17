@@ -5,22 +5,27 @@ import java.util.StringTokenizer;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 public class MainActivity extends Activity implements OnClickListener {
 
+	private static final int REQUEST_GALLERY = 0;		//他アプリからの返り値取得用
 	private ImageView[]		imView = new ImageView[6];	//ボックスイメージ一覧
 	private TextView[]		textView = new TextView[6];	//ボックス名一覧
 	private boolean			deleteFlag;					//Deleteモードのフラグ
 	private TextView		delNotif;					//Deleteモードの通知用View
+
+	private TextView		pathView;					//new_dialogのTextView
 
 	private MySQLite		sql;						//SQLiteオブジェクト
 	private SQLiteDatabase	db;							//データベースオブジェクト
@@ -45,6 +50,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		//ボタンにイベントリスナーを登録
 		findViewById(R.id.newButton).setOnClickListener(this);
 		findViewById(R.id.deleteButton).setOnClickListener(this);
+
 		//Deleteモード通知用Viewの所得
 		delNotif = (TextView)findViewById(R.id.delete_notification);
 
@@ -87,6 +93,17 @@ public class MainActivity extends Activity implements OnClickListener {
 		}
 	}
 
+	//他アプリからの結果参照
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data){
+		if(resultCode == RESULT_OK){
+			if(requestCode == REQUEST_GALLERY){
+				if(pathView != null)
+					pathView.setText(data.getDataString());
+			}
+		}
+	}
+
 	//クリックイベント処理
 	@Override
 	public void onClick(View v) {
@@ -99,10 +116,28 @@ public class MainActivity extends Activity implements OnClickListener {
 
 			//new_dialog用のレイアウトを読み込む
 			LayoutInflater inflater = LayoutInflater.from(this);
+
 			//layoutをviewに変換する
 			View layoutView = inflater.inflate(R.layout.new_dialog, null);
-			//EditTextをIDで読み込み、クリックイベントで参照できるようにfinal修飾子をつける
+
+			//ViewをIDで読み込み、クリックイベントで参照できるようにfinal修飾子をつける
 			final EditText edit = (EditText)layoutView.findViewById(R.id.new_dialog_edit);
+			pathView = (TextView)layoutView.findViewById(
+					R.id.new_dialog_image_load_path);
+
+			//new_dialogのボタンにイベントリスナーを適応
+			((Button)layoutView.findViewById(R.id.new_dialog_image_load_button))
+					.setOnClickListener(
+							new View.OnClickListener() {
+								@Override
+								public void onClick(View v) {
+									Intent intent = new Intent();
+									intent.setType("image/*");
+									intent.setAction(intent.ACTION_GET_CONTENT);
+									startActivityForResult(intent, REQUEST_GALLERY);
+								}
+							});
+
 			//ダイアログの生成
 			createDialog("New", layoutView,
 					"Create", "Cansel",
@@ -111,9 +146,11 @@ public class MainActivity extends Activity implements OnClickListener {
 						public void onClick(DialogInterface dialog, int which) {
 							//Positiveボタンが押された場合
 							if (which == DialogInterface.BUTTON_POSITIVE) {
+
 								//EditTextの文字列取得
 								String str = edit.getText().toString();
 								if(!str.equals("")){
+
 									//データベースへ登録
 									sql.createNewBox(db, str, "  ");
 									reSet();
@@ -129,19 +166,24 @@ public class MainActivity extends Activity implements OnClickListener {
 		} else {
 			//ImageViewのクリック処理
 			if (tag.substring(0, 6).equals("imView") && deleteFlag) {
+
 				//Dialogに表示するTextViewの生成
 				TextView text = new TextView(this);
+
 				//Dialogのクリックイベントから参照するボックス名を保持
 				final String title = textView[Integer.parseInt(
 						tag.replaceAll("[^0-9]", ""))].getText().toString();
+
 				//TextViewのパラメータ決定
 				text.setText(title + "を削除しますか？");
+
 				//ダイアログの生成
 				createDialog("Delete", text, "Delete", "Cansel",
 						new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
 						if (which == DialogInterface.BUTTON_POSITIVE) {
+
 							//データベースから削除する
 							sql.deleteEntry(db, "allBox", "title = ?",
 									new String[] { title });

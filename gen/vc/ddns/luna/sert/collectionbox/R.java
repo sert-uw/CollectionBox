@@ -41,7 +41,7 @@ public final class R {
         public static final int test=0x7f02000d;
     }
     public static final class id {
-        public static final int action_settings=0x7f090018;
+        public static final int action_settings=0x7f09001a;
         public static final int boxImage0=0x7f090005;
         public static final int boxImage1=0x7f090006;
         public static final int boxImage2=0x7f09000b;
@@ -60,6 +60,8 @@ public final class R {
         public static final int linearLayout1=0x7f090001;
         public static final int newButton=0x7f090002;
         public static final int new_dialog_edit=0x7f090017;
+        public static final int new_dialog_image_load_button=0x7f090018;
+        public static final int new_dialog_image_load_path=0x7f090019;
         public static final int tableRow1=0x7f090004;
         public static final int tableRow2=0x7f090007;
         public static final int tableRow3=0x7f09000a;
