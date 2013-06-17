@@ -10,6 +10,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
@@ -18,14 +19,16 @@ import android.view.View.OnClickListener;
 
 public class ImageEdit implements OnClickListener {
 	private MainActivity activity;
+	private BitmapDrawable originBitmap;
 
 	//コンストラクタ
 	public ImageEdit(MainActivity activity, String path) {
 		try {
+			//画像の読み込みでout of memoryが生じないよう対策をする
 			BitmapFactory.Options options = new BitmapFactory.Options();
 			options.inJustDecodeBounds = true;
 
-			//画像の読み込み
+			//画像の情報を読み込む
 			Bitmap bmp = BitmapFactory.decodeStream(
 					activity.getContentResolver().openInputStream(Uri.parse(path)),
 					null, options);
@@ -34,16 +37,18 @@ public class ImageEdit implements OnClickListener {
 			DisplayMetrics metrics = new DisplayMetrics();
 			activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
+			//端末のピクセル数
 			int display_x = metrics.widthPixels;
 			int display_y = metrics.heightPixels;
 
+			//画像の大きさと端末の大きさから比率を求める
 			int scaleW = options.outWidth / display_x + 1;
 			int scaleH = options.outHeight / display_y + 1;
 			int scale = Math.max(scaleW, scaleH);
 
+			//画像の比率を求めたので、今度は画像すべてを読み込む
 			options.inJustDecodeBounds = false;
 			options.inSampleSize = scale;
-
 			bmp = BitmapFactory.decodeStream(
 					activity.getContentResolver().openInputStream(Uri.parse(path)),
 					null, options);
@@ -61,6 +66,7 @@ public class ImageEdit implements OnClickListener {
 			if (bmp == null)
 				throw new IOException();
 
+			//読み込んだ画像をBitmap化する
 			bmp = Bitmap.createBitmap(bmp, 0, 0,
 					bmp.getWidth(), bmp.getHeight(), mat, true);
 
@@ -93,15 +99,19 @@ public class ImageEdit implements OnClickListener {
 
 			canvas.drawBitmap(bmp, src, dst, null);
 
-			//bgim = new BitmapDrawable(reSize);
+			originBitmap = new BitmapDrawable(reSize);
 
 		} catch (IOException e) {
-			/*bgim = new BitmapDrawable(BitmapFactory.decodeResource(
-					activity.getResources(), R.drawable.back));
-			System.out.println(e);
-			readData[2] = "default";
-			writeData();*/
+			e.printStackTrace();
 		}
+	}
+
+	//読み込んだ画像を返す
+	public BitmapDrawable getBitmap(String type){
+		if(type.equals("origin")){
+			return originBitmap;
+		}
+		return null;
 	}
 
 	//クリック処理

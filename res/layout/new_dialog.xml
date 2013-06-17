@@ -13,4 +13,26 @@
         android:hint="ボックス名"
         android:inputType="text" />
 
+    <Button
+        android:id="@+id/new_dialog_image_load_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignRight="@+id/new_dialog_edit"
+        android:layout_below="@+id/new_dialog_edit"
+        android:tag="new_load_button"
+        android:text="参照" />
+
+    <TextView
+        android:id="@+id/new_dialog_image_load_path"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/new_dialog_image_load_button"
+        android:layout_alignLeft="@+id/new_dialog_edit"
+        android:layout_below="@+id/new_dialog_edit"
+        android:layout_toLeftOf="@+id/new_dialog_image_load_button"
+        android:gravity="center_vertical"
+        android:hint="画像パス"
+        android:maxLines="1"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
 </RelativeLayout>
