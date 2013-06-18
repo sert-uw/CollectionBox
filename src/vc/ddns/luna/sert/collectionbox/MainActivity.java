@@ -7,6 +7,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -16,7 +17,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 public class MainActivity extends Activity implements OnClickListener {
@@ -81,21 +81,30 @@ public class MainActivity extends Activity implements OnClickListener {
 		String[] data = sql.searchAllBox(db);
 		StringTokenizer st;
 
-		//読み込んだデータを適応する
-		for (int i = 0; i < textView.length; i++) {
-			//データが空ならダミー(透明画像、スペース文字)を表示する
-			if (i >= data.length) {
-				textView[i].setText(" ");
-				imView[i].setImageResource(R.drawable.dummy);
-			} else {
-				//データからボックス名とイメージ画像を読み込む
-				st = new StringTokenizer(data[i], ",");
-				st.nextToken();
-				textView[i].setText(st.nextToken());
-				imView[i].setImageResource(R.drawable.no_image);
-				imView[i].setOnClickListener(this);
-				imView[i].setTag("imView" + i);
+		try{
+			//読み込んだデータを適応する
+			for (int i = 0; i < textView.length; i++) {
+				//データが空ならダミー(透明画像、スペース文字)を表示する
+				if (i >= data.length) {
+					textView[i].setText(" ");
+					imView[i].setImageResource(R.drawable.dummy);
+				} else {
+					//データからボックス名とイメージ画像を読み込む
+					st = new StringTokenizer(data[i], ",");
+					st.nextToken();
+					textView[i].setText(st.nextToken());
+					String imPath = st.nextToken();
+					if(imPath.equals("  "))
+						imView[i].setImageResource(R.drawable.no_image);
+					else
+						imView[i].setImageURI(Uri.parse(imPath));
+
+					imView[i].setOnClickListener(this);
+					imView[i].setTag("imView" + i);
+				}
 			}
+		}catch(Exception e){
+			e.printStackTrace();
 		}
 	}
 
@@ -146,7 +155,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
 			//ダイアログの生成
 			createDialog("New", layoutView,
-					"Create", "Cansel",
+					"Create", "Cancel",
 					new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
@@ -162,22 +171,12 @@ public class MainActivity extends Activity implements OnClickListener {
 										LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
 										View imEditView = inflater.inflate(R.layout.image_edit_layout, null);
 
-										//ViewからRelativeLayoutを取得
-										RelativeLayout rela = (RelativeLayout)imEditView.findViewById(R.id.image_edit_rela);
-
 										//ImageEditオブジェクトを生成しRelativeLayoutへ追加
 										ImageEdit imEdit = new ImageEdit(MainActivity.this,
-												pathView.getText().toString());
-
-										rela.addView(imEdit);
-										frame.addView(imEditView);
-									}
-
-									//同じタイトルがなければデータベースへ登録
-									if(sql.searchBoxByTitle(db, str).length == 0){
-										sql.createNewBox(db, str, "  ");
-										reSet();
-									}
+												str, pathView.getText().toString());
+										imEdit.setLayout(frame, imEditView);
+									}else
+										addDataToDB(str, "  ");
 								}
 							}
 						}
@@ -202,7 +201,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				text.setText(title + "を削除しますか？");
 
 				//ダイアログの生成
-				createDialog("Delete", text, "Delete", "Cansel",
+				createDialog("Delete", text, "Delete", "Cancel",
 						new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
@@ -218,6 +217,15 @@ public class MainActivity extends Activity implements OnClickListener {
 					}
 				});
 			}
+		}
+	}
+
+	//データベースへの追加
+	public void addDataToDB(String boxName, String imPath){
+		//同じタイトルがなければデータベースへ登録
+		if(sql.searchBoxByTitle(db, boxName).length == 0){
+			sql.createNewBox(db, boxName, imPath);
+			reSet();
 		}
 	}
 
