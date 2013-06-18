@@ -222,17 +222,27 @@ public class ImageEdit extends View implements OnClickListener{
 
 	//画像の保存
 	private String saveImage(){
+		//現在の画像位置を整数値で取得
 		int lx = (int)-location_x;
 		int ly = (int)-location_y;
+
+		//トリミング元と先を決める
 		Rect dst = new Rect(0, 0, 400, 400);
 		Rect src = new Rect(lx, ly + (view_y - view_x)/2,
 				lx + view_x, ly + (view_y - view_x)/2 + view_x);
+
+		//トリミング後のBitmapを用意する
 		Bitmap bitmap = Bitmap.createBitmap(400, 400, Config.ARGB_8888);
 		Canvas canvas = new Canvas(bitmap);
+
+		//トリミングをする
 		canvas.drawBitmap(originBitmap, src, dst, null);
 
-		final String SAVE_DIR = "/MyPhoto/";
+		//Bitmapの保存先をしていする
+		final String SAVE_DIR = "/CollectionBox/";
 		File file = new File(Environment.getExternalStorageDirectory().getPath() + SAVE_DIR);
+
+		//存在しなければ生成する
 		try{
 			if(!file.exists()){
 				file.mkdir();
@@ -241,11 +251,13 @@ public class ImageEdit extends View implements OnClickListener{
 			e.printStackTrace();
 		}
 
+		//ファイル名には現在の時刻を使用してファイル名の衝突をさける
 		Date mDate = new Date();
 		SimpleDateFormat fileNameDate = new SimpleDateFormat("yyyyMMdd_HHmmss");
 		String fileName = fileNameDate.format(mDate) + ".jpg";
 		String attachName = file.getAbsolutePath() + "/" + fileName;
 
+		//jpgファイルとして保存する
 		try {
 			FileOutputStream out = new FileOutputStream(attachName);
 			bitmap.compress(CompressFormat.JPEG, 100, out);
@@ -255,7 +267,7 @@ public class ImageEdit extends View implements OnClickListener{
 			e.printStackTrace();
 		}
 
-		// save index
+		// ファイルパスを登録してギャラリーを更新する
 		ContentValues values = new ContentValues();
 		ContentResolver contentResolver = activity.getContentResolver();
 		values.put(Images.Media.MIME_TYPE, "image/jpeg");
