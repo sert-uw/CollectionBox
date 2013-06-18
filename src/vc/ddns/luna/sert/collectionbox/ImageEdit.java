@@ -24,6 +24,8 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.MediaStore.Images;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
+import android.view.ScaleGestureDetector.SimpleOnScaleGestureListener;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -39,6 +41,10 @@ public class ImageEdit extends View implements OnClickListener{
 
 	private float			old_touch_x;	//タッチしたx座標
 	private float			old_touch_y;	//タッチしたy座標
+
+	private ScaleGestureDetector gesDetect;	//ジェスチャーでピンチイン、アウトを処理するオブジェクト
+	private float			scale = 1.0f;	//画像のスケール
+	private float			minScale;		//最小スケール
 
 	private float			location_x;		//画像を描画するx座標
 	private float			location_y;		//画像を描画するy座標
@@ -58,6 +64,9 @@ public class ImageEdit extends View implements OnClickListener{
 		this.activity = activity;
 		this.boxName = boxName;
 		imPath = path;
+
+		//ScaleGestureDetectorのオブジェクト生成
+		gesDetect = new ScaleGestureDetector(activity, onScaleGestureListener);
 	}
 
 	//このViewをレイアウトへ適応する
@@ -129,6 +138,11 @@ public class ImageEdit extends View implements OnClickListener{
 			location_x = -(originBitmap.getWidth()/2 - view_x/2);
 			location_y = (originBitmap.getHeight()/2 - view_y/2);
 
+			if(originBitmap.getWidth() <= originBitmap.getHeight())
+				minScale = view_x / (float)originBitmap.getWidth();
+			else
+				minScale = view_x / (float)originBitmap.getHeight();
+
 			//Bitmapの生成
 			overView = Bitmap.createBitmap(view_x, view_y, Config.ARGB_8888);
 
@@ -160,7 +174,11 @@ public class ImageEdit extends View implements OnClickListener{
 	protected void onDraw(Canvas canvas){
 		canvas.drawColor(Color.DKGRAY);
 		if(isLoaded){
-			canvas.drawBitmap(originBitmap, location_x, location_y, null);
+			Rect src = new Rect(0, 0, originBitmap.getWidth(), originBitmap.getHeight());
+			Rect dst = new Rect((int)location_x, (int)location_y,
+					(int)(location_x + originBitmap.getWidth()*scale),
+					(int)(location_y + originBitmap.getHeight()*scale));
+			canvas.drawBitmap(originBitmap, src, dst, null);
 			canvas.drawBitmap(overView, 0, 0, null);
 		}
 	}
@@ -169,6 +187,7 @@ public class ImageEdit extends View implements OnClickListener{
 	@Override
 	public boolean onTouchEvent(MotionEvent event){
 		float x=0, y=0;
+
 		switch(event.getAction() & MotionEvent.ACTION_MASK){
 
 		//画像を移動させる
@@ -182,13 +201,13 @@ public class ImageEdit extends View implements OnClickListener{
 			old_touch_y = y;
 
 			//画像が画面の外に出ないようにする
-			if(location_x <= - (originBitmap.getWidth() - view_x))
-				location_x = - (originBitmap.getWidth() - view_x);
+			if(location_x <= - (originBitmap.getWidth()*scale - view_x))
+				location_x = - (originBitmap.getWidth()*scale - view_x);
 			else if(location_x >= 0)
 				location_x = 0;
 
-			if(location_y <= - (originBitmap.getHeight() - view_y/2 - view_x/2))
-				location_y = - (originBitmap.getHeight() - view_y/2 - view_x/2);
+			if(location_y <= - (originBitmap.getHeight()*scale - view_y/2 - view_x/2))
+				location_y = - (originBitmap.getHeight()*scale - view_y/2 - view_x/2);
 
 			else if(location_y >= view_y/2 - view_x/2)
 				location_y = view_y/2 - view_x/2;
@@ -199,8 +218,14 @@ public class ImageEdit extends View implements OnClickListener{
 
 		case MotionEvent.ACTION_DOWN:
 			old_touch_x = event.getX(); old_touch_y = event.getY(); break;
-
 		}
+
+		//ジェスチャーによるスケール制御
+		gesDetect.onTouchEvent(event);
+
+		//scaleの大きさの範囲を指定
+		if(scale <= minScale)
+			scale = minScale;
 
 		return true;
 	}
@@ -211,25 +236,60 @@ public class ImageEdit extends View implements OnClickListener{
 		String tag = v.getTag().toString();
 
 		if(tag.equals("trimming")){
+			//トリミングしてデータベースに保存する
 			String newImPath = saveImage();
 			activity.addDataToDB(boxName, newImPath);
 			top.removeView(inner);
 
 		}else if(tag.equals("cancel")){
-
+			top.removeView(inner);
 		}
 	}
+
+	//前回のタッチ間比率を記憶
+	private float old_scale;
+
+	//ScaleGestureイベントを取得
+	private final SimpleOnScaleGestureListener onScaleGestureListener =
+			new SimpleOnScaleGestureListener(){
+
+		//マルチタッチされたときに呼ばれる
+		@Override
+		public boolean onScaleBegin(ScaleGestureDetector detector){
+			old_scale = detector.getScaleFactor();
+			return super.onScaleBegin(detector);
+		}
+
+		//指が離れたときに呼ばれる
+		@Override
+		public void onScaleEnd(ScaleGestureDetector detector){
+			scale *= detector.getScaleFactor()/old_scale;
+			old_scale = detector.getScaleFactor();
+			super.onScale(detector);
+		}
+
+		//タッチ間距離が変化したときに呼ばれる
+		@Override
+		public boolean onScale(ScaleGestureDetector detector){
+			scale *= detector.getScaleFactor()/old_scale;
+			old_scale = detector.getScaleFactor();
+			return super.onScale(detector);
+		}
+	};
 
 	//画像の保存
 	private String saveImage(){
 		//現在の画像位置を整数値で取得
-		int lx = (int)-location_x;
-		int ly = (int)-location_y;
+		//scaleの逆数を掛けることで拡大縮小を再現する
+		int lx = (int)(-location_x / scale);
+		int ly = (int)(-location_y / scale);
+		int vx = (int)(view_x / scale);
+		int vy = (int)(view_y / scale);
 
 		//トリミング元と先を決める
 		Rect dst = new Rect(0, 0, 400, 400);
-		Rect src = new Rect(lx, ly + (view_y - view_x)/2,
-				lx + view_x, ly + (view_y - view_x)/2 + view_x);
+		Rect src = new Rect(lx, ly + (vy - vx)/2,
+				lx + vx, ly + (vy - vx)/2 + vx);
 
 		//トリミング後のBitmapを用意する
 		Bitmap bitmap = Bitmap.createBitmap(400, 400, Config.ARGB_8888);

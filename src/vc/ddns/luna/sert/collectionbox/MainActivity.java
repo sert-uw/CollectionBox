@@ -4,6 +4,7 @@ import java.util.StringTokenizer;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
@@ -18,6 +19,7 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends Activity implements OnClickListener {
 
@@ -165,18 +167,22 @@ public class MainActivity extends Activity implements OnClickListener {
 								//EditTextの文字列取得
 								String str = edit.getText().toString();
 								if(!str.equals("")){
+									//同じタイトルがない場合
+									if(sql.searchBoxByTitle(db, str).length == 0){
 
-									//image_edit_layoutをViewで取得
-									if(!pathView.getText().toString().equals("")){
-										LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
-										View imEditView = inflater.inflate(R.layout.image_edit_layout, null);
+										//image_edit_layoutをViewで取得
+										if(!pathView.getText().toString().equals("")){
+											LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
+											View imEditView = inflater.inflate(R.layout.image_edit_layout, null);
 
-										//ImageEditオブジェクトを生成しRelativeLayoutへ追加
-										ImageEdit imEdit = new ImageEdit(MainActivity.this,
-												str, pathView.getText().toString());
-										imEdit.setLayout(frame, imEditView);
+											//ImageEditオブジェクトを生成しRelativeLayoutへ追加
+											ImageEdit imEdit = new ImageEdit(MainActivity.this,
+													str, pathView.getText().toString());
+											imEdit.setLayout(frame, imEditView);
+										}else
+											addDataToDB(str, "  ");
 									}else
-										addDataToDB(str, "  ");
+										toast(MainActivity.this, "すでに同じ名前が登録されています");
 								}
 							}
 						}
@@ -222,11 +228,9 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	//データベースへの追加
 	public void addDataToDB(String boxName, String imPath){
-		//同じタイトルがなければデータベースへ登録
-		if(sql.searchBoxByTitle(db, boxName).length == 0){
-			sql.createNewBox(db, boxName, imPath);
-			reSet();
-		}
+		sql.createNewBox(db, boxName, imPath);
+		reSet();
+
 	}
 
 	//ダイアログの表示
@@ -258,4 +262,9 @@ public class MainActivity extends Activity implements OnClickListener {
 			delNotif.setText("");
 		}
 	}
+
+    //トーストの表示　
+    private static void toast(Context context,String text) {
+        Toast.makeText(context,text,Toast.LENGTH_SHORT).show();
+    }
 }
