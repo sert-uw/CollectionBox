@@ -67,7 +67,7 @@
                     android:id="@+id/tableRow1"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="50dp"
+                    android:layout_marginTop="10dp"
                     android:gravity="center" >
 
                     <ImageView
@@ -114,7 +114,7 @@
                     android:id="@+id/tableRow3"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="50dp"
+                    android:layout_marginTop="20dp"
                     android:gravity="center_horizontal" >
 
                     <ImageView
@@ -161,7 +161,7 @@
                     android:id="@+id/tableRow5"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="50dp"
+                    android:layout_marginTop="20dp"
                     android:gravity="center_horizontal" >
 
                     <ImageView

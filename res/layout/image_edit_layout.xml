@@ -16,14 +16,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginRight="20dp"
+            android:tag="trimming"
             android:text="トリミング" />
 
         <Button
-            android:id="@+id/image_edit_cns"
+            android:id="@+id/image_edit_cnc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
+            android:tag="cancel"
             android:text="キャンセル" />
+
     </LinearLayout>
 
     <RelativeLayout

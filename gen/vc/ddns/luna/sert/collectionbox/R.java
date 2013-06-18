@@ -58,7 +58,7 @@ public final class R {
         public static final int deleteButton=0x7f090004;
         public static final int delete_notification=0x7f090018;
         public static final int imageView1=0x7f090001;
-        public static final int image_edit_cns=0x7f09001a;
+        public static final int image_edit_cnc=0x7f09001a;
         public static final int image_edit_rela=0x7f09001b;
         public static final int image_edit_tri=0x7f090019;
         public static final int linearLayout1=0x7f090002;
