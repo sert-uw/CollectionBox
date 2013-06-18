@@ -14,7 +14,9 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 public class MainActivity extends Activity implements OnClickListener {
@@ -26,6 +28,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	private TextView		delNotif;					//Deleteモードの通知用View
 
 	private TextView		pathView;					//new_dialogのTextView
+	private FrameLayout		frame;						//main_layoutのFrameLayout
 
 	private MySQLite		sql;						//SQLiteオブジェクト
 	private SQLiteDatabase	db;							//データベースオブジェクト
@@ -51,8 +54,11 @@ public class MainActivity extends Activity implements OnClickListener {
 		findViewById(R.id.newButton).setOnClickListener(this);
 		findViewById(R.id.deleteButton).setOnClickListener(this);
 
-		//Deleteモード通知用Viewの所得
+		//Deleteモード通知用Viewの取得
 		delNotif = (TextView)findViewById(R.id.delete_notification);
+
+		//FrameLayoutの取得
+		frame = (FrameLayout)findViewById(R.id.main_frame);
 
 		//ImageViewとTextViewのオブジェクトを取得
 		for (int i = 0; i < 6; i++) {
@@ -153,7 +159,21 @@ public class MainActivity extends Activity implements OnClickListener {
 
 									//データベースへ登録
 									sql.createNewBox(db, str, "  ");
-									reSet();
+
+									//image_edit_layoutをViewで取得
+									LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
+									View imEditView = inflater.inflate(R.layout.image_edit_layout, null);
+
+									//ViewからRelativeLayoutを取得
+									RelativeLayout rela = (RelativeLayout)imEditView.findViewById(R.id.image_edit_rela);
+
+									//ImageEditオブジェクトを生成しRelativeLayoutへ追加
+									ImageEdit imEdit = new ImageEdit(MainActivity.this);
+									imEdit.loadImage(pathView.getText().toString());
+									rela.addView(imEdit);
+									frame.addView(imEditView);
+
+									//reSet();
 								}
 							}
 						}
