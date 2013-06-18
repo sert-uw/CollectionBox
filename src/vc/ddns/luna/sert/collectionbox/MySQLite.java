@@ -26,7 +26,6 @@ public class MySQLite extends SQLiteOpenHelper {
 	@Override
 	public void onCreate(SQLiteDatabase db) {
 		//テーブルを作成
-		//資金管理テーブル
 		db.execSQL(
 				"create table allBox ("
 						+ "_id integer primary key autoincrement not null, "
@@ -70,9 +69,14 @@ public class MySQLite extends SQLiteOpenHelper {
 
 	//データを検索
 	//ボックス一覧を取得
-	public String[] searchByProject(SQLiteDatabase db){
+	public String[] searchAllBox(SQLiteDatabase db){
 		useKeys = allBoxKeys;
 		return searchByData(db, "allBox", "project = ?", new String[]{"allBox"});
+	}
+
+	public String[] searchBoxByTitle(SQLiteDatabase db, String title){
+		useKeys = allBoxKeys;
+		return searchByData(db, "allBox", "title = ?", new String[]{title});
 	}
 
 	//カテゴリのデータを取得

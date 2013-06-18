@@ -78,7 +78,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	//ボックス一覧の更新
 	private void reSet() {
-		String[] data = sql.searchByProject(db);
+		String[] data = sql.searchAllBox(db);
 		StringTokenizer st;
 
 		//読み込んだデータを適応する
@@ -139,7 +139,7 @@ public class MainActivity extends Activity implements OnClickListener {
 								public void onClick(View v) {
 									Intent intent = new Intent();
 									intent.setType("image/*");
-									intent.setAction(intent.ACTION_GET_CONTENT);
+									intent.setAction(Intent.ACTION_GET_CONTENT);
 									startActivityForResult(intent, REQUEST_GALLERY);
 								}
 							});
@@ -157,23 +157,27 @@ public class MainActivity extends Activity implements OnClickListener {
 								String str = edit.getText().toString();
 								if(!str.equals("")){
 
-									//データベースへ登録
-									sql.createNewBox(db, str, "  ");
-
 									//image_edit_layoutをViewで取得
-									LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
-									View imEditView = inflater.inflate(R.layout.image_edit_layout, null);
+									if(!pathView.getText().toString().equals("")){
+										LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
+										View imEditView = inflater.inflate(R.layout.image_edit_layout, null);
 
-									//ViewからRelativeLayoutを取得
-									RelativeLayout rela = (RelativeLayout)imEditView.findViewById(R.id.image_edit_rela);
+										//ViewからRelativeLayoutを取得
+										RelativeLayout rela = (RelativeLayout)imEditView.findViewById(R.id.image_edit_rela);
 
-									//ImageEditオブジェクトを生成しRelativeLayoutへ追加
-									ImageEdit imEdit = new ImageEdit(MainActivity.this);
-									imEdit.loadImage(pathView.getText().toString());
-									rela.addView(imEdit);
-									frame.addView(imEditView);
+										//ImageEditオブジェクトを生成しRelativeLayoutへ追加
+										ImageEdit imEdit = new ImageEdit(MainActivity.this,
+												pathView.getText().toString());
 
-									//reSet();
+										rela.addView(imEdit);
+										frame.addView(imEditView);
+									}
+
+									//同じタイトルがなければデータベースへ登録
+									if(sql.searchBoxByTitle(db, str).length == 0){
+										sql.createNewBox(db, str, "  ");
+										reSet();
+									}
 								}
 							}
 						}
