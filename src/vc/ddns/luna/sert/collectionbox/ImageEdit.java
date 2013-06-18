@@ -10,19 +10,24 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.View.OnClickListener;
 
-public class ImageEdit implements OnClickListener {
+public class ImageEdit extends View implements OnClickListener {
 	private MainActivity activity;
-	private BitmapDrawable originBitmap;
+	private Bitmap originBitmap;
 
 	//コンストラクタ
-	public ImageEdit(MainActivity activity, String path) {
+	public ImageEdit(MainActivity activity){
+		super(activity);
+		this.activity = activity;
+	}
+
+	//画像のロード
+	public void loadImage(String path) {
 		try {
 			//画像の読み込みでout of memoryが生じないよう対策をする
 			BitmapFactory.Options options = new BitmapFactory.Options();
@@ -99,15 +104,20 @@ public class ImageEdit implements OnClickListener {
 
 			canvas.drawBitmap(bmp, src, dst, null);
 
-			originBitmap = new BitmapDrawable(reSize);
+			originBitmap = reSize;
 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
+	@Override
+	protected void onDraw(Canvas canvas){
+		canvas.drawBitmap(originBitmap, 0, 0, null);
+	}
+
 	//読み込んだ画像を返す
-	public BitmapDrawable getBitmap(String type){
+	public Bitmap getBitmap(String type){
 		if(type.equals("origin")){
 			return originBitmap;
 		}
