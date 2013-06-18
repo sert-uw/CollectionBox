@@ -194,34 +194,38 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		} else {
 			//ImageViewのクリック処理
-			if (tag.substring(0, 6).equals("imView") && deleteFlag) {
-
-				//Dialogに表示するTextViewの生成
-				TextView text = new TextView(this);
-
+			if (tag.substring(0, 6).equals("imView")){
 				//Dialogのクリックイベントから参照するボックス名を保持
 				final String title = textView[Integer.parseInt(
 						tag.replaceAll("[^0-9]", ""))].getText().toString();
 
-				//TextViewのパラメータ決定
-				text.setText(title + "を削除しますか？");
+				if(deleteFlag) {
 
-				//ダイアログの生成
-				createDialog("Delete", text, "Delete", "Cancel",
-						new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-						if (which == DialogInterface.BUTTON_POSITIVE) {
+					//Dialogに表示するTextViewの生成
+					TextView text = new TextView(this);
 
-							//データベースから削除する
-							sql.deleteEntry(db, "allBox", "title = ?",
-									new String[] { title });
-							reSet();
+					//TextViewのパラメータ決定
+					text.setText(title + "を削除しますか？");
+
+					//ダイアログの生成
+					createDialog("Delete", text, "Delete", "Cancel",
+							new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							if (which == DialogInterface.BUTTON_POSITIVE) {
+
+								//データベースから削除する
+								sql.deleteEntry(db, "allBox", "title = ?",
+										new String[] { title });
+								reSet();
+							}
+							//最後にDeleteモードを解除する
+							changeDelNotif();
 						}
-						//最後にDeleteモードを解除する
-						changeDelNotif();
-					}
-				});
+					});
+				}else {
+					changeActivity(title);
+				}
 			}
 		}
 	}
@@ -266,5 +270,21 @@ public class MainActivity extends Activity implements OnClickListener {
     //トーストの表示　
     private static void toast(Context context,String text) {
         Toast.makeText(context,text,Toast.LENGTH_SHORT).show();
+    }
+
+    //Activity変更
+    public void changeActivity(String boxName){
+    	//インテントの生成
+    	Intent intent = new Intent(this,
+    			vc.ddns.luna.sert.collectionbox.InBoxActivity.class);
+    	try{
+    		//インテントへパラメータ追加
+    		intent.putExtra("boxName", boxName);
+
+    		//Activityの呼び出し
+    		this.startActivity(intent);
+    	}catch(Exception e){
+    		e.printStackTrace();
+    	}
     }
 }
