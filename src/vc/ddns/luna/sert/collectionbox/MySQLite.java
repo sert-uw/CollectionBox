@@ -8,8 +8,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class MySQLite extends SQLiteOpenHelper {
 
-	private static final String[] allBoxKeys = {"project", "title", "imPath"};
-	private static final String[] boxKeys = {"category", "bgPath", "dataPath"};
+	private static final String[] allBoxKeys	= {"project", "boxName", "imPath"};
+	private static final String[] boxKeys		= {"boxName", "sheetName", "bgImPath"};
+	private static final String[] sheetKeys		= {"sheetName", "dataType", "data"};
 	private 			 String[] useKeys;
 
 	//コンストラクタ
@@ -30,8 +31,19 @@ public class MySQLite extends SQLiteOpenHelper {
 				"create table allBox ("
 						+ "_id integer primary key autoincrement not null, "
 						+ "project text not null, "
-						+ "title TEXT ," + "imPath TEXT)");
+						+ "boxName TEXT ," + "imPath TEXT)");
 
+		db.execSQL(
+				"create table boxSheet ("
+				+ "_id integer primary key autoincrement not null, "
+				+ "boxName text not null, "
+				+ "sheetName TEXT, " + "bgImPath TEXT)");
+
+		db.execSQL(
+				"create table sheetData ("
+				+ "_id integer primary key autoincrement not null, "
+				+ "sheetName text not null, "
+				+ "dataType TEXT, " + "data TEXT)");
 	}
 
 	/**
@@ -43,20 +55,15 @@ public class MySQLite extends SQLiteOpenHelper {
 
 	}
 
-	//テーブルの新規作成
-	public void createTable(SQLiteDatabase db, String tableName){
-		db.execSQL("create table " + tableName + " ("
-				+ "_id integer primary key autoincrement not null, "
-				+ "category text not null, "
-				+ "bgPath TEXT, " + "dataPath TEXT)");
-	}
-
+	//////////////////////
+	////テーブルへ追加////
+	//////////////////////
 	//ボックス管理テーブルへの追加
-	public void createNewBox(SQLiteDatabase db, String title, String imPath){
+	public void createNewBox(SQLiteDatabase db, String boxName, String imPath){
 		ContentValues val = new ContentValues();
 
 		val.put("project", "allBox");
-		val.put("title", title);
+		val.put("boxName", boxName);
 		val.put("imPath", imPath);
 
 		setEntry(db, val, "allBox");
@@ -67,23 +74,31 @@ public class MySQLite extends SQLiteOpenHelper {
 		db.insert(tag, null, val);
 	}
 
-	//データを検索
+	////////////////////
+	////データを検索////
+	////////////////////
 	//ボックス一覧を取得
 	public String[] searchAllBox(SQLiteDatabase db){
 		useKeys = allBoxKeys;
 		return searchByData(db, "allBox", "project = ?", new String[]{"allBox"});
 	}
 
-	public String[] searchBoxByTitle(SQLiteDatabase db, String title){
+	//ボックスの有無を確認
+	public String[] searchBoxByBoxName(SQLiteDatabase db, String boxName){
 		useKeys = allBoxKeys;
-		return searchByData(db, "allBox", "title = ?", new String[]{title});
+		return searchByData(db, "allBox", "boxName = ?", new String[]{boxName});
 	}
 
-	//カテゴリのデータを取得
-	public String[] searchByCategory(SQLiteDatabase db, String projectName,
-			String category){
+	//ボックスのすべてのシートを取得
+	public String[] searchSheetByBoxName(SQLiteDatabase db, String boxName){
 		useKeys = boxKeys;
-		return searchByData(db, projectName, "category = ?", new String[]{category});
+		return searchByData(db, "boxSheet", "boxName = ?", new String[]{boxName});
+	}
+
+	//シートのすべてのデータを取得
+	public String[] searchDataBySheetName(SQLiteDatabase db, String sheetName){
+		useKeys = sheetKeys;
+		return searchByData(db, "sheetData", "sheetName = ?", new String[]{sheetName});
 	}
 
 	//指定されたテーブルからデータを検索
@@ -129,20 +144,9 @@ public class MySQLite extends SQLiteOpenHelper {
 		return result;
 	}
 
-	//データ追加
-	public void inputEntry(SQLiteDatabase db, String tableName, String[] data){
-		useKeys = (tableName.equals("allBox"))? allBoxKeys : boxKeys;
-
-		ContentValues val = new ContentValues();
-
-		for(int i=0; i<useKeys.length; i++){
-			val.put(useKeys[i], data[i]);
-		}
-
-		db.insert(tableName, null, val);
-	}
-
-	//データを削除する
+	////////////////////////
+	////データを削除する////
+	////////////////////////
 	public void deleteEntry(SQLiteDatabase db, String tableName,
 			String searchStr, String[] searchValue) {
 

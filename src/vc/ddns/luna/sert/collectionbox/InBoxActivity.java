@@ -45,7 +45,7 @@ public class InBoxActivity extends Activity {
 		sql = new MySQLite(this);
 		db = sql.getWritableDatabase();
 
-		String[] data = sql.searchBoxByTitle(db, boxName);
+		String[] data = sql.searchBoxByBoxName(db, boxName);
 
 		StringTokenizer st = new StringTokenizer(data[0], ",");
 

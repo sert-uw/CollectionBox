@@ -168,7 +168,7 @@ public class MainActivity extends Activity implements OnClickListener {
 								String str = edit.getText().toString();
 								if(!str.equals("")){
 									//同じタイトルがない場合
-									if(sql.searchBoxByTitle(db, str).length == 0){
+									if(sql.searchBoxByBoxName(db, str).length == 0){
 
 										//image_edit_layoutをViewで取得
 										if(!pathView.getText().toString().equals("")){
@@ -196,7 +196,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			//ImageViewのクリック処理
 			if (tag.substring(0, 6).equals("imView")){
 				//Dialogのクリックイベントから参照するボックス名を保持
-				final String title = textView[Integer.parseInt(
+				final String boxName = textView[Integer.parseInt(
 						tag.replaceAll("[^0-9]", ""))].getText().toString();
 
 				if(deleteFlag) {
@@ -205,7 +205,7 @@ public class MainActivity extends Activity implements OnClickListener {
 					TextView text = new TextView(this);
 
 					//TextViewのパラメータ決定
-					text.setText(title + "を削除しますか？");
+					text.setText(boxName + "を削除しますか？");
 
 					//ダイアログの生成
 					createDialog("Delete", text, "Delete", "Cancel",
@@ -215,8 +215,8 @@ public class MainActivity extends Activity implements OnClickListener {
 							if (which == DialogInterface.BUTTON_POSITIVE) {
 
 								//データベースから削除する
-								sql.deleteEntry(db, "allBox", "title = ?",
-										new String[] { title });
+								sql.deleteEntry(db, "allBox", "boxName = ?",
+										new String[] { boxName });
 								reSet();
 							}
 							//最後にDeleteモードを解除する
@@ -224,7 +224,7 @@ public class MainActivity extends Activity implements OnClickListener {
 						}
 					});
 				}else {
-					changeActivity(title);
+					changeActivity(boxName);
 				}
 			}
 		}
