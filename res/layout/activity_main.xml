@@ -72,15 +72,15 @@
 
                     <ImageView
                         android:id="@+id/boxImage0"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
                         android:layout_gravity="center"
                         android:src="@drawable/dummy" />
 
                     <ImageView
                         android:id="@+id/boxImage1"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
                         android:layout_gravity="center"
                         android:src="@drawable/dummy" />
                 </TableRow>
@@ -119,15 +119,15 @@
 
                     <ImageView
                         android:id="@+id/boxImage2"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
                         android:layout_gravity="center"
                         android:src="@drawable/dummy" />
 
                     <ImageView
                         android:id="@+id/boxImage3"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
                         android:layout_gravity="center"
                         android:src="@drawable/dummy" />
                 </TableRow>
@@ -166,15 +166,15 @@
 
                     <ImageView
                         android:id="@+id/boxImage4"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
                         android:layout_gravity="center"
                         android:src="@drawable/dummy" />
 
                     <ImageView
                         android:id="@+id/boxImage5"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
                         android:layout_gravity="center"
                         android:src="@drawable/dummy" />
                 </TableRow>

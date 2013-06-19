@@ -96,6 +96,7 @@ public class MainActivity extends Activity implements OnClickListener {
 					st.nextToken();
 					textView[i].setText(st.nextToken());
 					String imPath = st.nextToken();
+
 					if(imPath.equals("  "))
 						imView[i].setImageResource(R.drawable.no_image);
 					else

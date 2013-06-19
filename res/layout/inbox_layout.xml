@@ -24,25 +24,24 @@
             android:layout_below="@+id/imageView1"
             android:layout_centerHorizontal="true" >
 
-            <TextView
-                android:id="@+id/inBox_boxName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="50dp"
-                android:text="BoxName"
-                android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textSize="30sp" />
-
             <ImageView
                 android:id="@+id/inBox_boxIm"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/inBox_boxName"
                 android:layout_centerHorizontal="true"
-                android:layout_marginTop="50dp"
+                android:layout_centerVertical="true"
                 android:src="@drawable/dummy" />
+
+            <TextView
+                android:id="@+id/inBox_boxName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/inBox_boxIm"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="60dp"
+                android:text="BoxName"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:textSize="30sp" />
 
         </RelativeLayout>
 

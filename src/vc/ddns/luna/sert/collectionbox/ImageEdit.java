@@ -287,12 +287,12 @@ public class ImageEdit extends View implements OnClickListener{
 		int vy = (int)(view_y / scale);
 
 		//トリミング元と先を決める
-		Rect dst = new Rect(0, 0, 400, 400);
+		Rect dst = new Rect(0, 0, 800, 800);
 		Rect src = new Rect(lx, ly + (vy - vx)/2,
 				lx + vx, ly + (vy - vx)/2 + vx);
 
 		//トリミング後のBitmapを用意する
-		Bitmap bitmap = Bitmap.createBitmap(400, 400, Config.ARGB_8888);
+		Bitmap bitmap = Bitmap.createBitmap(800, 800, Config.ARGB_8888);
 		Canvas canvas = new Canvas(bitmap);
 
 		//トリミングをする
