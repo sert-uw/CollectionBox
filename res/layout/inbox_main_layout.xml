@@ -43,6 +43,16 @@
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:textSize="30sp" />
 
+            <Button
+                android:id="@+id/inBox_createButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/inBox_boxIm"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="50dp"
+                android:tag="inBox_create"
+                android:text="Create New Sheet" />
+
         </RelativeLayout>
 
     </RelativeLayout>

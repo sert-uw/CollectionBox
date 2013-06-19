@@ -19,6 +19,7 @@ public final class R {
     public static final class color {
         public static final int Black=0x7f080001;
         public static final int TranslucentWhite=0x7f080000;
+        public static final int White=0x7f080002;
     }
     public static final class dimen {
         /**  Default screen margins, per the Android Design guidelines. 
@@ -48,7 +49,7 @@ public final class R {
     }
     public static final class id {
         public static final int FrameLayout2=0x7f0a0005;
-        public static final int action_settings=0x7f0a0023;
+        public static final int action_settings=0x7f0a0027;
         public static final int boxImage0=0x7f0a0007;
         public static final int boxImage1=0x7f0a0008;
         public static final int boxImage2=0x7f0a000d;
@@ -69,14 +70,18 @@ public final class R {
         public static final int image_edit_tri=0x7f0a0019;
         public static final int inBox_boxIm=0x7f0a001e;
         public static final int inBox_boxName=0x7f0a001f;
+        public static final int inBox_createButton=0x7f0a0020;
         public static final int inBox_rela=0x7f0a001d;
+        public static final int inBox_sheetComment=0x7f0a0021;
+        public static final int inBox_sheetName=0x7f0a0022;
+        public static final int inBox_sheetOpenButton=0x7f0a0023;
         public static final int inBox_viewFlipper=0x7f0a001c;
         public static final int linearLayout1=0x7f0a0002;
         public static final int main_frame=0x7f0a0000;
         public static final int newButton=0x7f0a0003;
-        public static final int new_dialog_edit=0x7f0a0020;
-        public static final int new_dialog_image_load_button=0x7f0a0021;
-        public static final int new_dialog_image_load_path=0x7f0a0022;
+        public static final int new_dialog_edit=0x7f0a0024;
+        public static final int new_dialog_image_load_button=0x7f0a0025;
+        public static final int new_dialog_image_load_path=0x7f0a0026;
         public static final int tableRow1=0x7f0a0006;
         public static final int tableRow2=0x7f0a0009;
         public static final int tableRow3=0x7f0a000c;
@@ -87,8 +92,9 @@ public final class R {
     public static final class layout {
         public static final int activity_main=0x7f030000;
         public static final int image_edit_layout=0x7f030001;
-        public static final int inbox_layout=0x7f030002;
-        public static final int new_dialog=0x7f030003;
+        public static final int inbox_main_layout=0x7f030002;
+        public static final int inbox_sheet_layout=0x7f030003;
+        public static final int new_dialog=0x7f030004;
     }
     public static final class menu {
         public static final int main=0x7f090000;
