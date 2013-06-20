@@ -18,6 +18,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
+        android:background="@color/TranslucentBlack"
         android:maxEms="10"
         android:maxLines="5"
         android:textAppearance="?android:attr/textAppearanceLarge"
@@ -30,6 +31,7 @@
         android:layout_above="@+id/inBox_sheetComment"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="70dp"
+        android:background="@color/TranslucentBlack"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textColor="@color/White" />
 

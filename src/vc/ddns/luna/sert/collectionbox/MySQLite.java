@@ -9,7 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class MySQLite extends SQLiteOpenHelper {
 
 	private static final String[] allBoxKeys	= {"project", "boxName", "imPath"};
-	private static final String[] boxKeys		= {"boxName", "sheetName", "bgImPath"};
+	private static final String[] boxKeys		= {"boxName", "sheetName", "comment", "bgImPath"};
 	private static final String[] sheetKeys		= {"sheetName", "dataType", "data"};
 	private 			 String[] useKeys;
 
@@ -37,7 +37,7 @@ public class MySQLite extends SQLiteOpenHelper {
 				"create table boxSheet ("
 				+ "_id integer primary key autoincrement not null, "
 				+ "boxName text not null, "
-				+ "sheetName TEXT, " + "bgImPath TEXT)");
+				+ "sheetName TEXT, " + "comment TEXT, " + "bgImPath TEXT)");
 
 		db.execSQL(
 				"create table sheetData ("
@@ -67,6 +67,16 @@ public class MySQLite extends SQLiteOpenHelper {
 		val.put("imPath", imPath);
 
 		setEntry(db, val, "allBox");
+	}
+
+	//シートの作成
+	public void createNewSheet(SQLiteDatabase db, String[] data){
+		ContentValues val = new ContentValues();
+
+		for(int i=0; i<boxKeys.length; i++)
+			val.put(boxKeys[i], data[i]);
+
+		setEntry(db, val, "boxSheet");
 	}
 
 	//テーブルへ挿入
