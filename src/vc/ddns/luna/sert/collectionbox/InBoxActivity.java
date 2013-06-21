@@ -158,7 +158,6 @@ public class InBoxActivity extends Activity implements OnClickListener,
 				shCom.setText(st.nextToken());
 
 				String bgImPath = st.nextToken();
-				System.out.println(bgImPath);
 				if(!bgImPath.equals("  ")){
 					Drawable bgIm = new BitmapDrawable(BitmapFactory.decodeFile(bgImPath));
 					shLayView[i].setBackgroundDrawable(bgIm);
@@ -233,7 +232,7 @@ public class InBoxActivity extends Activity implements OnClickListener,
 
 								if(!title.equals("")){
 									//同じタイトルがない場合
-									if(sql.searchDataBySheetName(db, title).length == 0){
+									if(sql.searchDataBySheetNameAndType(db, title, null).length == 0){
 										addDataToDB(title, comment, bgPath);
 
 									}else
@@ -242,6 +241,8 @@ public class InBoxActivity extends Activity implements OnClickListener,
 							}
 					}
 			});
+		}else {
+			changeActivity(tag);
 		}
 	}
 
@@ -282,6 +283,22 @@ public class InBoxActivity extends Activity implements OnClickListener,
     //トーストの表示　
     private static void toast(Context context,String text) {
         Toast.makeText(context,text,Toast.LENGTH_SHORT).show();
+    }
+
+    //Activity変更
+    public void changeActivity(String sheetName){
+    	//インテントの生成
+    	Intent intent = new Intent(this,
+    			vc.ddns.luna.sert.collectionbox.SheetActivity.class);
+    	try{
+    		//インテントへパラメータ追加
+    		intent.putExtra("sheetName", sheetName);
+
+    		//Activityの呼び出し
+    		this.startActivity(intent);
+    	}catch(Exception e){
+    		e.printStackTrace();
+    	}
     }
 
 	//////////////////////////////

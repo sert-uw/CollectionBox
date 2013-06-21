@@ -106,9 +106,18 @@ public class MySQLite extends SQLiteOpenHelper {
 	}
 
 	//シートのすべてのデータを取得
-	public String[] searchDataBySheetName(SQLiteDatabase db, String sheetName){
+	public String[] searchDataBySheetNameAndType(SQLiteDatabase db, String sheetName, String dataType){
 		useKeys = sheetKeys;
-		return searchByData(db, "sheetData", "sheetName = ?", new String[]{sheetName});
+
+		String serchKey = "sheetName = ?";
+		String[] serchValue;
+		if(dataType != null){
+			serchKey += " and dataType = ?";
+			serchValue = new String[]{sheetName, dataType};
+		}else
+			serchValue = new String[]{sheetName};
+
+		return searchByData(db, "sheetData", serchKey, serchValue);
 	}
 
 	//指定されたテーブルからデータを検索
