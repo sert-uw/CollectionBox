@@ -158,6 +158,7 @@ public class InBoxActivity extends Activity implements OnClickListener,
 				shCom.setText(st.nextToken());
 
 				String bgImPath = st.nextToken();
+				System.out.println(bgImPath);
 				if(!bgImPath.equals("  ")){
 					Drawable bgIm = new BitmapDrawable(BitmapFactory.decodeFile(bgImPath));
 					shLayView[i].setBackgroundDrawable(bgIm);
@@ -395,8 +396,6 @@ public class InBoxActivity extends Activity implements OnClickListener,
 			bmp = BitmapFactory.decodeStream(
 					activity.getContentResolver().openInputStream(Uri.parse(path)),
 					null, options);
-
-			System.out.println(scale + " " + bmp.getWidth() + " " + bmp.getHeight());
 
 			Cursor query = MediaStore.Images.Media.query(
 					activity.getContentResolver(), Uri.parse(path),

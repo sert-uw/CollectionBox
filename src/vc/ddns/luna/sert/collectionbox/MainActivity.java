@@ -214,11 +214,7 @@ public class MainActivity extends Activity implements OnClickListener {
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
 							if (which == DialogInterface.BUTTON_POSITIVE) {
-
-								//データベースから削除する
-								sql.deleteEntry(db, "allBox", "boxName = ?",
-										new String[] { boxName });
-								reSet();
+								deleteDataFromDB(db, boxName);
 							}
 							//最後にDeleteモードを解除する
 							changeDelNotif();
@@ -236,6 +232,25 @@ public class MainActivity extends Activity implements OnClickListener {
 		sql.createNewBox(db, boxName, imPath);
 		reSet();
 
+	}
+
+	//データベースから削除
+	private void deleteDataFromDB(SQLiteDatabase db, String boxName){
+		//データベースから削除する
+		//ボックスを削除するのでシートと個々のデータも削除する
+		sql.deleteEntry(db, "allBox", "boxName = ?",
+				new String[] { boxName });
+
+		String[] sheetData = sql.searchSheetByBoxName(db, boxName);
+		for(int i=0; i<sheetData.length; i++){
+			StringTokenizer st = new StringTokenizer(sheetData[i], ",");
+			st.nextElement();
+			String sheetName = st.nextToken();
+			sql.deleteEntry(db, "boxSheet", "sheetName = ?", new String[]{sheetName});
+			sql.deleteEntry(db, "sheetData", "sheetName = ?", new String[]{sheetName});
+		}
+
+		reSet();
 	}
 
 	//ダイアログの表示
