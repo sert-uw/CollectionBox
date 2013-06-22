@@ -50,7 +50,9 @@ public final class R {
     }
     public static final class id {
         public static final int FrameLayout2=0x7f0a0005;
-        public static final int action_settings=0x7f0a002b;
+        public static final int LinearLayout1=0x7f0a002e;
+        public static final int RelativeLayout1=0x7f0a002c;
+        public static final int action_settings=0x7f0a0033;
         public static final int boxImage0=0x7f0a0007;
         public static final int boxImage1=0x7f0a0008;
         public static final int boxImage2=0x7f0a000d;
@@ -63,6 +65,9 @@ public final class R {
         public static final int boxTitle3=0x7f0a0011;
         public static final int boxTitle4=0x7f0a0016;
         public static final int boxTitle5=0x7f0a0017;
+        public static final int button1=0x7f0a0030;
+        public static final int button2=0x7f0a0031;
+        public static final int button3=0x7f0a0032;
         public static final int create_sheet_button=0x7f0a001b;
         public static final int create_sheet_comment=0x7f0a001a;
         public static final int create_sheet_showPath=0x7f0a001c;
@@ -87,6 +92,9 @@ public final class R {
         public static final int new_dialog_edit=0x7f0a0028;
         public static final int new_dialog_image_load_button=0x7f0a0029;
         public static final int new_dialog_image_load_path=0x7f0a002a;
+        public static final int scrollView1=0x7f0a002d;
+        public static final int seekBar1=0x7f0a002f;
+        public static final int sheet_viewFlipper=0x7f0a002b;
         public static final int tableRow1=0x7f0a0006;
         public static final int tableRow2=0x7f0a0009;
         public static final int tableRow3=0x7f0a000c;
@@ -101,6 +109,8 @@ public final class R {
         public static final int inbox_main_layout=0x7f030003;
         public static final int inbox_sheet_layout=0x7f030004;
         public static final int new_dialog=0x7f030005;
+        public static final int sheet_main_layout=0x7f030006;
+        public static final int sheet_music_layout=0x7f030007;
     }
     public static final class menu {
         public static final int main=0x7f090000;

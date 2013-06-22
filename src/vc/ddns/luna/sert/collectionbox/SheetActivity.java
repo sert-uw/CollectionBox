@@ -40,7 +40,7 @@ public class SheetActivity extends Activity implements GestureDetector.OnGesture
 		gestureDetector = new GestureDetector(this, this);
 		inflater = LayoutInflater.from(this);
 
-		//MainActivityからデータを引き継ぐ
+		//InBoxActivityからデータを引き継ぐ
 		Bundle extras = getIntent().getExtras();
 		if(extras != null){
 			 sheetName = extras.getString("sheetName");

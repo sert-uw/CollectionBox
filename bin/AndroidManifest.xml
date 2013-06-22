@@ -28,6 +28,12 @@
             android:name=".InBoxActivity"
             android:theme="@android:style/Theme.NoTitleBar">
         </activity>
+
+	    <activity
+            android:name=".SheetActivity"
+            android:theme="@android:style/Theme.NoTitleBar">
+        </activity>
+
     </application>
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
