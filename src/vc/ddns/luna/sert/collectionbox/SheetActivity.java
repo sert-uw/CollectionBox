@@ -237,8 +237,11 @@ public class SheetActivity extends Activity implements OnClickListener,
 	}
 
 	//musicListの背景制御
-	private void reSetLinearBg(){
-		musicList.get(selectedNumber).setBackgroundResource(R.drawable.under_line);
+	private void setLinearBg(boolean switching){
+		if(switching)
+			musicList.get(selectedNumber).setBackgroundResource(R.drawable.under_line2);
+		else
+			musicList.get(selectedNumber).setBackgroundResource(R.drawable.under_line);
 	}
 
 	/////////////////////////////////////////////////
@@ -252,20 +255,25 @@ public class SheetActivity extends Activity implements OnClickListener,
 			if(mpService != null){
 				if(!mpService.isSetMusic())
 					setMusic();
-				mpService.startMusic();
-				mpService.setLooping(true);
-				mpService.setSeekBar((SeekBar)findViewById(R.id.sheet_music_seekBar));
+				startMusic();
 			}
 
+		}else if(tag.equals("pause")){
+			mpService.pauseMusic();
+			((ImageButton)findViewById(R.id.sheet_music_playBack_button)).setImageResource(R.drawable.button1);
+			findViewById(R.id.sheet_music_playBack_button).setTag("playBack");
+
 		}else if(tag.equals("rewinding")){
+			if(mpService != null)
+				mpService.movePosition(0);
 
 		}else if(tag.equals("fastForwarding")){
 
 		}else {
-			reSetLinearBg();
+			setLinearBg(false);
 			selectedNumber = Integer.parseInt(tag.replaceAll("[^0-9]", ""));
-			v.setBackgroundResource(R.drawable.under_line2);
 			setMusic();
+			startMusic();
 		}
 	}
 
@@ -277,7 +285,17 @@ public class SheetActivity extends Activity implements OnClickListener,
 			StringTokenizer st = new StringTokenizer(musicData[selectedNumber], ",");
 			st.nextToken(); st.nextToken();
 			mpService.setMusic(SheetActivity.this, Uri.parse(st.nextToken()));
+			setLinearBg(true);
 		}
+	}
+
+	//楽曲の再生
+	private void startMusic(){
+		mpService.startMusic();
+		mpService.setLooping(true);
+		mpService.setSeekBar((SeekBar)findViewById(R.id.sheet_music_seekBar));
+		((ImageButton)findViewById(R.id.sheet_music_playBack_button)).setImageResource(R.drawable.button4);
+		findViewById(R.id.sheet_music_playBack_button).setTag("pause");
 	}
 
 	@Override

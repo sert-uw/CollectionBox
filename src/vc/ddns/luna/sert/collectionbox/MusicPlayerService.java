@@ -18,6 +18,7 @@ public class MusicPlayerService extends Service{
 	private final IBinder iBinder = new ServiceLocalBinder();//Binderの生成
 	private MediaPlayer mediaPlayer;//音楽再生用
 	private boolean setFlag = false;//楽曲のセットが完了したかどうか
+	private boolean pauseFlag = false;//一時停止しているかどうか
 	private boolean stop = false;//ストップフラグ
 	private SeekBar seekBar;//レイアウトのSeekBar
 
@@ -80,21 +81,16 @@ public class MusicPlayerService extends Service{
 		seekBar.setMax(mediaPlayer.getDuration());
 
 		seekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+			@Override
+			public void onStopTrackingTouch(SeekBar paramSeekBar) {}
 
 			@Override
-			public void onStopTrackingTouch(SeekBar paramSeekBar) {
-
-			}
-
-			@Override
-			public void onStartTrackingTouch(SeekBar paramSeekBar) {
-
-			}
+			public void onStartTrackingTouch(SeekBar paramSeekBar) {}
 
 			@Override
 			public void onProgressChanged(SeekBar paramSeekBar, int paramInt, boolean fromUser) {
 				if(fromUser)
-					mediaPlayer.seekTo(paramSeekBar.getProgress());
+					movePosition(paramSeekBar.getProgress());
 			}
 		});
 
@@ -102,7 +98,7 @@ public class MusicPlayerService extends Service{
 			@Override
 			public void run() {
 				while(true){
-					if(mediaPlayer.isPlaying()){
+					if(mediaPlayer.isPlaying() && !pauseFlag){
 						seekBar.setProgress(mediaPlayer.getCurrentPosition());
 						try{
 							Thread.sleep(1000);
@@ -139,13 +135,24 @@ public class MusicPlayerService extends Service{
 	public void startMusic(){
 		if(setFlag){
 			try{
-				mediaPlayer.prepare();
+				if(!pauseFlag)
+					mediaPlayer.prepare();
+
 				mediaPlayer.start();
+				pauseFlag = false;
 			}catch(IllegalStateException e){
 				e.printStackTrace();
 			}catch(IOException e){
 				e.printStackTrace();
 			}
+		}
+	}
+
+	//楽曲の一時停止
+	public void pauseMusic(){
+		if(setFlag){
+			mediaPlayer.pause();
+			pauseFlag = true;
 		}
 	}
 
@@ -169,7 +176,14 @@ public class MusicPlayerService extends Service{
 	public void moveToIdle(){
 		mediaPlayer.reset();
 		setFlag = false;
+		pauseFlag = false;
 		if(seekBar != null)
 			seekBar.setProgress(0);
+	}
+
+	//MediaPlayerの再生位置を変更する
+	public void movePosition(int pos){
+		mediaPlayer.seekTo(pos);
+		seekBar.setProgress(pos);
 	}
 }
