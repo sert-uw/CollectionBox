@@ -15,7 +15,7 @@
         android:src="@drawable/koukoku" />
 
     <ScrollView
-        android:id="@+id/scrollView1"
+        android:id="@+id/sheet_music_scroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/LinearLayout1"
@@ -23,9 +23,11 @@
         android:layout_centerHorizontal="true" >
 
         <LinearLayout
+            android:id="@+id/sheet_music_scroll_linear"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical" >
+
         </LinearLayout>
     </ScrollView>
 
@@ -49,31 +51,34 @@
             android:gravity="center_horizontal" >
 
             <ImageButton
-                android:id="@+id/imageButton3"
+                android:id="@+id/sheet_music_rewinding_button"
                 android:layout_width="75dp"
                 android:layout_height="75dp"
                 android:layout_weight="1.0"
                 android:background="@drawable/dummy"
                 android:scaleType="fitCenter"
-                android:src="@drawable/button3" />
+                android:src="@drawable/button3"
+                android:tag="rewinding" />
 
             <ImageButton
-                android:id="@+id/imageButton1"
+                android:id="@+id/sheet_music_playBack_button"
                 android:layout_width="75dp"
                 android:layout_height="75dp"
                 android:layout_weight="1.0"
                 android:background="@drawable/dummy"
                 android:scaleType="fitCenter"
-                android:src="@drawable/button1" />
+                android:src="@drawable/button1"
+                android:tag="playBack" />
 
             <ImageButton
-                android:id="@+id/imageButton2"
+                android:id="@+id/sheet_music_fastForwarding_button"
                 android:layout_width="75dp"
                 android:layout_height="75dp"
                 android:layout_weight="1.0"
                 android:background="@drawable/dummy"
                 android:scaleType="fitCenter"
-                android:src="@drawable/button2" />
+                android:src="@drawable/button2"
+                android:tag="fastForwarding" />
 
         </LinearLayout>
 

@@ -155,7 +155,11 @@ public class InBoxActivity extends Activity implements OnClickListener,
 				//読み込んだデータを適応する
 				st.nextToken();
 				shName.setText(st.nextToken());
-				shCom.setText(st.nextToken());
+
+				String comment = st.nextToken();
+				if(comment.equals("  "))
+					comment = "";
+				shCom.setText(comment);
 
 				String bgImPath = st.nextToken();
 				System.out.println(bgImPath);
@@ -261,7 +265,7 @@ public class InBoxActivity extends Activity implements OnClickListener,
 	//データベースへの追加
 	public void addDataToDB(String sheetTitle, String sheetCom, String bgImPath){
 		String[] data = new String[]{boxName, sheetTitle, sheetCom, bgImPath};
-		sql.createNewSheet(db, data);
+		sql.createNewData(db, "boxSheet", data);
 		readSheet();
 	}
 

@@ -33,7 +33,8 @@
         android:layout_marginBottom="70dp"
         android:background="@color/TranslucentBlack"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textColor="@color/White" />
+        android:textColor="@color/White"
+        android:textSize="30sp" />
 
     <Button
         android:id="@+id/inBox_sheetOpenButton"

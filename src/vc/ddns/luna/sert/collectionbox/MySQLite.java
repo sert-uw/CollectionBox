@@ -70,13 +70,18 @@ public class MySQLite extends SQLiteOpenHelper {
 	}
 
 	//シートの作成
-	public void createNewSheet(SQLiteDatabase db, String[] data){
+	public void createNewData(SQLiteDatabase db, String tableName, String[] data){
 		ContentValues val = new ContentValues();
 
-		for(int i=0; i<boxKeys.length; i++)
-			val.put(boxKeys[i], data[i]);
+		if(tableName.equals("boxSheet"))
+			useKeys = boxKeys;
+		else if(tableName.equals("sheetData"))
+			useKeys = sheetKeys;
 
-		setEntry(db, val, "boxSheet");
+		for(int i=0; i<useKeys.length; i++)
+			val.put(useKeys[i], data[i]);
+
+		setEntry(db, val, tableName);
 	}
 
 	//テーブルへ挿入
