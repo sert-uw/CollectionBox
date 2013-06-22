@@ -109,7 +109,7 @@ public class ImageEdit extends View implements OnClickListener{
 			view_y = this.getHeight();
 
 			//画像の大きさと端末の大きさから高さの比率を求める
-			int scale = options.outHeight / view_y + 1;
+			int scale = options.outHeight / view_y;
 
 			//画像の比率を求めたので、今度は画像すべてを読み込む
 			options.inJustDecodeBounds = false;

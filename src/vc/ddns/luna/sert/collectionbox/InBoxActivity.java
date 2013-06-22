@@ -385,8 +385,8 @@ public class InBoxActivity extends Activity implements OnClickListener,
 			int view_x = inBoxRela.getWidth();
 			int view_y = inBoxRela.getHeight();
 
-			int scaleW = options.outWidth / view_x + 1;
-			int scaleH = options.outHeight / view_y + 1;
+			int scaleW = options.outWidth / view_x;
+			int scaleH = options.outHeight / view_y;
 			int scale = Math.max(scaleW, scaleH);
 
 			options.inJustDecodeBounds = false;
@@ -395,6 +395,8 @@ public class InBoxActivity extends Activity implements OnClickListener,
 			bmp = BitmapFactory.decodeStream(
 					activity.getContentResolver().openInputStream(Uri.parse(path)),
 					null, options);
+
+			System.out.println(scale + " " + bmp.getWidth() + " " + bmp.getHeight());
 
 			Cursor query = MediaStore.Images.Media.query(
 					activity.getContentResolver(), Uri.parse(path),

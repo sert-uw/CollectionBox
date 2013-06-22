@@ -48,26 +48,32 @@
             android:layout_height="wrap_content"
             android:gravity="center_horizontal" >
 
-            <Button
-                android:id="@+id/button1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <ImageButton
+                android:id="@+id/imageButton3"
+                android:layout_width="75dp"
+                android:layout_height="75dp"
                 android:layout_weight="1.0"
-                android:text="戻る" />
+                android:background="@drawable/dummy"
+                android:scaleType="fitCenter"
+                android:src="@drawable/button3" />
 
-            <Button
-                android:id="@+id/button2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <ImageButton
+                android:id="@+id/imageButton1"
+                android:layout_width="75dp"
+                android:layout_height="75dp"
                 android:layout_weight="1.0"
-                android:text="再生" />
+                android:background="@drawable/dummy"
+                android:scaleType="fitCenter"
+                android:src="@drawable/button1" />
 
-            <Button
-                android:id="@+id/button3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <ImageButton
+                android:id="@+id/imageButton2"
+                android:layout_width="75dp"
+                android:layout_height="75dp"
                 android:layout_weight="1.0"
-                android:text="進む" />
+                android:background="@drawable/dummy"
+                android:scaleType="fitCenter"
+                android:src="@drawable/button2" />
 
         </LinearLayout>
 
