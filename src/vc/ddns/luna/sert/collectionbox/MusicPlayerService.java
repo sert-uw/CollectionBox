@@ -1,6 +1,7 @@
 package vc.ddns.luna.sert.collectionbox;
 
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import android.app.Service;
 import android.content.Context;
@@ -21,6 +22,9 @@ public class MusicPlayerService extends Service{
 	private boolean pauseFlag = false;//一時停止しているかどうか
 	private boolean stop = false;//ストップフラグ
 	private SeekBar seekBar;//レイアウトのSeekBar
+	private List<Uri> playList = new ArrayList<Uri>();//プレイリスト
+	private int trackNumber;//再生しているトラックナンバー
+	private Context context;
 
 	//サービス生成時に呼ばれる
 	@Override
@@ -30,7 +34,33 @@ public class MusicPlayerService extends Service{
 
 			@Override
 			public void onCompletion(MediaPlayer mp) {
+				if(!mediaPlayer.isLooping() && playList.size() != 0){
+					mediaPlayer.reset();
 
+					trackNumber++;
+					if(playList != null)
+						if(trackNumber == playList.size())
+							trackNumber = 0;
+
+					System.out.println(trackNumber);
+					SheetActivity activity = (SheetActivity)context;
+					if(activity != null)
+						activity.setTrackNumber(trackNumber);
+
+					try {
+						mediaPlayer.setDataSource(context, playList.get(trackNumber));
+						mediaPlayer.prepare();
+						mediaPlayer.start();
+
+						if(seekBar != null){
+							seekBar.setProgress(0);
+							seekBar.setMax(mediaPlayer.getDuration());
+						}
+
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
 			}
 		});
 		super.onCreate();
@@ -46,7 +76,7 @@ public class MusicPlayerService extends Service{
 	//サービス終了時に呼ばれる
 	@Override
 	public void onDestroy(){
-
+		shutdown();
 	}
 
 	//バインド(接続時)に呼ばれる
@@ -113,22 +143,28 @@ public class MusicPlayerService extends Service{
 
 	//楽曲のセット
 	public void setMusic(Context context, Uri uri){
+		this.context = context;
 		if(mediaPlayer == null)
 			return;
 
 		try {
 			mediaPlayer.setDataSource(context, uri);
 			setFlag = true;
+			if(playList != null){
+				trackNumber = playList.indexOf(uri);
+				if(trackNumber == -1) trackNumber = 0;
+			}else
+				trackNumber = 0;
 
-		} catch (IllegalArgumentException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
-		} catch (SecurityException e) {
-			e.printStackTrace();
-		} catch (IllegalStateException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+			mediaPlayer.reset();
 		}
+	}
+
+	//プレイリストのセット
+	public void setPlayList(List<Uri> list){
+		playList = list;
 	}
 
 	//楽曲の再生
@@ -140,10 +176,9 @@ public class MusicPlayerService extends Service{
 
 				mediaPlayer.start();
 				pauseFlag = false;
-			}catch(IllegalStateException e){
+			}catch (Exception e) {
 				e.printStackTrace();
-			}catch(IOException e){
-				e.printStackTrace();
+				mediaPlayer.reset();
 			}
 		}
 	}
@@ -172,6 +207,11 @@ public class MusicPlayerService extends Service{
 		return setFlag;
 	}
 
+	//プレイリストがセットされているか
+	public boolean isSetPlayList(){
+		return (playList.size() == 0)? false : true;
+	}
+
 	//MediaPlayerをIdleに移行する
 	public void moveToIdle(){
 		mediaPlayer.reset();
@@ -185,5 +225,14 @@ public class MusicPlayerService extends Service{
 	public void movePosition(int pos){
 		mediaPlayer.seekTo(pos);
 		seekBar.setProgress(pos);
+	}
+
+	//終了処理
+	public void shutdown(){
+	    if (mediaPlayer != null) {
+	        mediaPlayer.reset();
+	        mediaPlayer.release();
+	        mediaPlayer = null;
+	    }
 	}
 }

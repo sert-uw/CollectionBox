@@ -30,7 +30,6 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.ViewFlipper;
 
 public class SheetActivity extends Activity implements OnClickListener,
@@ -47,6 +46,8 @@ public class SheetActivity extends Activity implements OnClickListener,
 
 	private String[]		musicData;//音楽データ
 	private String[]		pictureData;//画像データ
+	private String			musicSequence;//音楽の再生順番定義
+	private List<Uri>		musicPlayList = new ArrayList<Uri>();//プレイリスト保持
 
 	private List<LinearLayout> musicList = new ArrayList<LinearLayout>();//楽曲一覧をListで保持
 	private int				selectedNumber = 0;//選択されてる楽曲番号を保持
@@ -79,11 +80,11 @@ public class SheetActivity extends Activity implements OnClickListener,
 		sql = new MySQLite(this);
 		db = sql.getWritableDatabase();
 
+		doBindService();
 		setAnimations();
 		setLayout();
 		readData();
 
-		doBindService();
 	}
 
 	//フリックによるアニメーションをセットする
@@ -102,9 +103,21 @@ public class SheetActivity extends Activity implements OnClickListener,
 	private void readData(){
 		musicData = sql.searchDataBySheetNameAndType(db, sheetName, "music");
 		pictureData = sql.searchDataBySheetNameAndType(db, sheetName, "picture");
+		String[] readData = sql.searchDataBySheetNameAndType(db, sheetName, "musicSequence");
+		if(readData.length == 0){
+			musicSequence = "  ";
+			String[] addData = new String[]{sheetName, "musicSequence", musicSequence};
+			sql.createNewData(db, "sheetData", addData);
+		}else{
+			StringTokenizer st = new StringTokenizer(readData[0], ",");
+			st.nextToken(); st.nextToken();
+			musicSequence = st.nextToken();
+		}
 
 		((LinearLayout)musicView.findViewById(R.id.sheet_music_scroll_linear)).removeAllViews();
 		musicList.removeAll(musicList);
+
+		List<String> list = new ArrayList<String>();
 
 		for(int i=0; i<musicData.length; i++){
 			StringTokenizer st = new StringTokenizer(musicData[i], ",");
@@ -117,8 +130,28 @@ public class SheetActivity extends Activity implements OnClickListener,
             c.moveToFirst();
             File file = new File(c.getString(0));
 
-			readMusicData(MediaStore.Audio.Media.DISPLAY_NAME + " = ?", new String[]{file.getName()});
+            list.add(file.getName());
 		}
+
+		System.out.println(musicSequence);
+		musicPlayList.removeAll(musicPlayList);
+		StringTokenizer st = new StringTokenizer(musicSequence, "/");
+		for(int i=0; i<list.size(); i++){
+			int number = i;
+			if(st.hasMoreTokens() && !musicSequence.equals("  "))
+				number = list.indexOf(st.nextToken());
+
+			StringTokenizer st2 = new StringTokenizer(musicData[number], ",");
+			st2.nextToken(); st2.nextToken();
+			musicPlayList.add(Uri.parse(st2.nextToken()));
+
+			readMusicData(MediaStore.Audio.Media.DISPLAY_NAME + " = ?", new String[]{list.get(number)});
+		}
+
+		setLinearBg(true);
+
+		if(mpService != null)
+			mpService.setPlayList(musicPlayList);
 	}
 
 	//Layoutのセットを行う
@@ -229,8 +262,28 @@ public class SheetActivity extends Activity implements OnClickListener,
 		if(resultCode == RESULT_OK){
 			if(requestCode == REQUEST_MUSIC){
 	            String[] addData = new String[]{sheetName, "music", data.getDataString()};
-
 	            sql.createNewData(db, "sheetData", addData);
+
+	            musicPlayList.add(data.getData());
+	            String list = "";
+
+	            for(int i=0; i<musicPlayList.size(); i++){
+	            	ContentResolver cr = getContentResolver();
+	            	String[] columns = {MediaStore.Images.Media.DATA };
+	            	Cursor c = cr.query(musicPlayList.get(i), columns, null, null, null);
+
+	            	c.moveToFirst();
+	            	File file = new File(c.getString(0));
+
+	            	list += file.getName();
+	            	if(i != musicPlayList.size() - 1)
+	            		list += "/";
+	            }
+
+	            addData = new String[]{sheetName, "musicSequence", list};
+	            sql.upDateEntry(db, "sheetData", "dataType = ?",
+	            		new String[]{"musicSequence"}, addData);
+
 	            readData();
 			}
 		}
@@ -242,6 +295,13 @@ public class SheetActivity extends Activity implements OnClickListener,
 			musicList.get(selectedNumber).setBackgroundResource(R.drawable.under_line2);
 		else
 			musicList.get(selectedNumber).setBackgroundResource(R.drawable.under_line);
+	}
+
+	//再生中のトラックナンバー同期
+	public void setTrackNumber(int number){
+		setLinearBg(false);
+		selectedNumber = number;
+		setLinearBg(true);
 	}
 
 	/////////////////////////////////////////////////
@@ -291,8 +351,10 @@ public class SheetActivity extends Activity implements OnClickListener,
 
 	//楽曲の再生
 	private void startMusic(){
+		if(!mpService.isSetPlayList())
+			mpService.setPlayList(musicPlayList);
 		mpService.startMusic();
-		mpService.setLooping(true);
+		//mpService.setLooping(true);
 		mpService.setSeekBar((SeekBar)findViewById(R.id.sheet_music_seekBar));
 		((ImageButton)findViewById(R.id.sheet_music_playBack_button)).setImageResource(R.drawable.button4);
 		findViewById(R.id.sheet_music_playBack_button).setTag("pause");
@@ -365,8 +427,8 @@ public class SheetActivity extends Activity implements OnClickListener,
 
 	private ServiceConnection mConnection = new ServiceConnection(){
 		public void onServiceConnected(ComponentName className, IBinder service){
-			//サービスとの接続確率時に呼び出される
-			Toast.makeText(SheetActivity.this, "Activity:onServiceConnected", Toast.LENGTH_SHORT).show();
+			//サービスとの接続確立時に呼び出される
+			//Toast.makeText(SheetActivity.this, "Activity:onServiceConnected", Toast.LENGTH_SHORT).show();
 
 			//サービスにはIBinder経由で#getService()してダイレクトにアクセス可能
 			mpService = ((MusicPlayerService.ServiceLocalBinder)service).getService();
@@ -376,7 +438,7 @@ public class SheetActivity extends Activity implements OnClickListener,
 			//サービスとの切断(異常系処理)
 			//プロセスのクラッシュなど意図しないサービスの切断が発生した場合に呼ばれる
 			mpService = null;
-			Toast.makeText(SheetActivity.this, "Activity:onServiceDisconnected", Toast.LENGTH_SHORT).show();
+			//Toast.makeText(SheetActivity.this, "Activity:onServiceDisconnected", Toast.LENGTH_SHORT).show();
 		}
 	};
 

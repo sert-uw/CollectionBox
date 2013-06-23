@@ -168,9 +168,23 @@ public class MySQLite extends SQLiteOpenHelper {
 		return result;
 	}
 
-	////////////////////////
-	////データを削除する////
-	////////////////////////
+	//データを更新する
+	public void upDateEntry(SQLiteDatabase db, String tableName,
+			String serchStr, String[] serchValue, String[] data){
+		ContentValues val = new ContentValues();
+
+		if(tableName.equals("boxSheet"))
+			useKeys = boxKeys;
+		else if(tableName.equals("sheetData"))
+			useKeys = sheetKeys;
+
+		for(int i=0; i<useKeys.length; i++)
+			val.put(useKeys[i], data[i]);
+
+		db.update(tableName, val, serchStr, serchValue);
+	}
+
+	//データを削除する
 	public void deleteEntry(SQLiteDatabase db, String tableName,
 			String searchStr, String[] searchValue) {
 
