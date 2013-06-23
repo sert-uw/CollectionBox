@@ -299,6 +299,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
     		//Activityの呼び出し
     		this.startActivity(intent);
+    		this.finish();
     	}catch(Exception e){
     		e.printStackTrace();
     	}

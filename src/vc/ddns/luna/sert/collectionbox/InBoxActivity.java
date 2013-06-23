@@ -33,6 +33,7 @@ import android.provider.MediaStore;
 import android.provider.MediaStore.Images;
 import android.util.DisplayMetrics;
 import android.view.GestureDetector;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MotionEvent;
@@ -290,17 +291,37 @@ public class InBoxActivity extends Activity implements OnClickListener,
         Toast.makeText(context,text,Toast.LENGTH_SHORT).show();
     }
 
+	//バックキーが押されたときの処理
+	@Override
+	public boolean dispatchKeyEvent(KeyEvent e){
+		if(e.getAction() == KeyEvent.ACTION_DOWN){
+			if(e.getKeyCode() == KeyEvent.KEYCODE_BACK){
+				changeActivity(null);
+			}
+		}
+		return super.dispatchKeyEvent(e);
+	}
+
     //Activity変更
     public void changeActivity(String sheetName){
     	//インテントの生成
-    	Intent intent = new Intent(this,
-    			vc.ddns.luna.sert.collectionbox.SheetActivity.class);
+    	Intent intent = null;
     	try{
-    		//インテントへパラメータ追加
-    		intent.putExtra("sheetName", sheetName);
+	    	if(sheetName != null){
+	    		intent = new Intent(this,
+	    				vc.ddns.luna.sert.collectionbox.SheetActivity.class);
+	    		//インテントへパラメータ追加
+	    		intent.putExtra("sheetName", sheetName);
+	    		intent.putExtra("boxName", boxName);
+
+	    	}else{
+	    		intent = new Intent(this,
+	    				vc.ddns.luna.sert.collectionbox.MainActivity.class);
+	    	}
 
     		//Activityの呼び出し
     		this.startActivity(intent);
+    		this.finish();
     	}catch(Exception e){
     		e.printStackTrace();
     	}

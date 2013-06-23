@@ -45,6 +45,7 @@ public class SheetActivity extends Activity implements OnClickListener,
 
 	private SeekBar			seekBar;//レイアウトのシークバー
 
+	private String			boxName;//ボックス名
 	private String			sheetName;//シート名
 
 	private String[]		musicData;//音楽データ
@@ -77,6 +78,7 @@ public class SheetActivity extends Activity implements OnClickListener,
 		Bundle extras = getIntent().getExtras();
 		if(extras != null){
 			 sheetName = extras.getString("sheetName");
+			 boxName = extras.getString("boxName");
 		}
 
 		//SQLiteオブジェクト及びデータベースオブジェクトの生成
@@ -100,11 +102,29 @@ public class SheetActivity extends Activity implements OnClickListener,
 		if(e.getAction() == KeyEvent.ACTION_DOWN){
 			if(e.getKeyCode() == KeyEvent.KEYCODE_BACK){
 				doUnbindService();
-				this.finish();
+				changeActivity();
 			}
 		}
 		return super.dispatchKeyEvent(e);
 	}
+
+    //Activity変更
+    public void changeActivity(){
+    	//インテントの生成
+    	Intent intent = new Intent(this,
+    			vc.ddns.luna.sert.collectionbox.InBoxActivity.class);
+    	try{
+    		//インテントへパラメータ追加
+    		intent.putExtra("sheetName", sheetName);
+    		intent.putExtra("boxName", boxName);
+
+    		//Activityの呼び出し
+    		this.startActivity(intent);
+    		this.finish();
+    	}catch(Exception e){
+    		e.printStackTrace();
+    	}
+    }
 
 	//フリックによるアニメーションをセットする
 	private void setAnimations(){
@@ -311,10 +331,25 @@ public class SheetActivity extends Activity implements OnClickListener,
 
 	//musicListの背景制御
 	private void setLinearBg(boolean switching){
+		if(musicList.size() == 0)
+			return;
+
 		if(switching)
 			musicList.get(selectedNumber).setBackgroundResource(R.drawable.under_line2);
 		else
 			musicList.get(selectedNumber).setBackgroundResource(R.drawable.under_line);
+	}
+
+	//再生ボタンと一時停止ボタンの切り替え
+	private void switchCenterButton(String tag){
+		if(tag.equals("playBack")){
+			((ImageButton)findViewById(R.id.sheet_music_playBack_button)).setImageResource(R.drawable.button1);
+			findViewById(R.id.sheet_music_playBack_button).setTag("playBack");
+
+		}else if(tag.equals("pause")){
+			((ImageButton)findViewById(R.id.sheet_music_playBack_button)).setImageResource(R.drawable.button4);
+			findViewById(R.id.sheet_music_playBack_button).setTag("pause");
+		}
 	}
 
 	//再生中のトラックナンバー同期
@@ -333,32 +368,33 @@ public class SheetActivity extends Activity implements OnClickListener,
 		String tag = v.getTag().toString();
 
 		if(tag.equals("playBack")){
-			if(mpService != null){
+			if(mpService != null && musicList.size() != 0){
 				setPlayList();
 				if(!mpService.isSetMusic())
 					setMusic();
 				startMusic();
 			}
 
-		}else if(tag.equals("pause")){
+		}else if(tag.equals("pause")  && musicList.size() != 0){
 			mpService.pauseMusic();
-			((ImageButton)findViewById(R.id.sheet_music_playBack_button)).setImageResource(R.drawable.button1);
-			findViewById(R.id.sheet_music_playBack_button).setTag("playBack");
+			switchCenterButton("playBack");
 
-		}else if(tag.equals("rewinding")){
+		}else if(tag.equals("rewinding")  && musicList.size() != 0){
 			if(mpService != null)
 				mpService.movePosition(0);
 
-		}else if(tag.equals("fastForwarding")){
+		}else if(tag.equals("fastForwarding")  && musicList.size() != 0){
 			if(mpService != null)
 				mpService.nextMusic();
 
 		}else {
-			setLinearBg(false);
-			selectedNumber = Integer.parseInt(tag.replaceAll("[^0-9]", ""));
-			setPlayList();
-			setMusic();
-			startMusic();
+			if(musicList.size() != 0){
+				setLinearBg(false);
+				selectedNumber = Integer.parseInt(tag.replaceAll("[^0-9]", ""));
+				setPlayList();
+				setMusic();
+				startMusic();
+			}
 		}
 	}
 
@@ -385,8 +421,7 @@ public class SheetActivity extends Activity implements OnClickListener,
 			mpService.setSeekBar(seekBar);
 		mpService.startMusic();
 		//mpService.setLooping(true);
-		((ImageButton)findViewById(R.id.sheet_music_playBack_button)).setImageResource(R.drawable.button4);
-		findViewById(R.id.sheet_music_playBack_button).setTag("pause");
+		switchCenterButton("pause");
 	}
 
 	@Override
@@ -462,9 +497,17 @@ public class SheetActivity extends Activity implements OnClickListener,
 			//サービスにはIBinder経由で#getService()してダイレクトにアクセス可能
 			mpService = ((MusicPlayerService.ServiceLocalBinder)service).getService();
 
+			if(!mpService.setNames(boxName, sheetName)){
+					doUnbindService();
+					mpService.shutdown();
+					doStartService(new Intent(SheetActivity.this, MusicPlayerService.class));
+					doBindService(new Intent(SheetActivity.this, MusicPlayerService.class));
+			}
 			mpService.setContext(SheetActivity.this);
 			mpService.setSeekBar(seekBar);
 			mpService.sendTrackNumber();
+
+			switchCenterButton((mpService.isPlaying())? "pause":"playBack");
 		}
 
 		public void onServiceDisconnected(ComponentName className){
