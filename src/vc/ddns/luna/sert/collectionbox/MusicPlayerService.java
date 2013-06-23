@@ -16,60 +16,38 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 
 public class MusicPlayerService extends Service{
 
-	private final IBinder iBinder = new ServiceLocalBinder();//Binderの生成
-	private MediaPlayer mediaPlayer;//音楽再生用
-	private boolean setFlag = false;//楽曲のセットが完了したかどうか
-	private boolean pauseFlag = false;//一時停止しているかどうか
-	private boolean stop = false;//ストップフラグ
-	private SeekBar seekBar;//レイアウトのSeekBar
-	private List<Uri> playList = new ArrayList<Uri>();//プレイリスト
-	private int trackNumber;//再生しているトラックナンバー
-	private Context context;
+	private final		IBinder iBinder = new ServiceLocalBinder();//Binderの生成
+	private int			startId;//サービスID
+	private MediaPlayer	mediaPlayer;//音楽再生用
+	private boolean		setFlag = false;//楽曲のセットが完了したかどうか
+	private boolean		pauseFlag = false;//一時停止しているかどうか
+	private boolean		stop = false;//ストップフラグ
+	private SeekBar		seekBar;//レイアウトのSeekBar
+	private List<Uri>	playList = new ArrayList<Uri>();//プレイリスト
+	private int			trackNumber;//再生しているトラックナンバー
+	private Context		context;
 
 	//サービス生成時に呼ばれる
 	@Override
 	public void onCreate(){
+		super.onCreate();
 		mediaPlayer = new MediaPlayer();
 		mediaPlayer.setOnCompletionListener(new OnCompletionListener() {
 
 			@Override
 			public void onCompletion(MediaPlayer mp) {
 				if(!mediaPlayer.isLooping() && playList.size() != 0){
-					mediaPlayer.reset();
-
-					trackNumber++;
-					if(playList != null)
-						if(trackNumber == playList.size())
-							trackNumber = 0;
-
-					System.out.println(trackNumber);
-					SheetActivity activity = (SheetActivity)context;
-					if(activity != null)
-						activity.setTrackNumber(trackNumber);
-
-					try {
-						mediaPlayer.setDataSource(context, playList.get(trackNumber));
-						mediaPlayer.prepare();
-						mediaPlayer.start();
-
-						if(seekBar != null){
-							seekBar.setProgress(0);
-							seekBar.setMax(mediaPlayer.getDuration());
-						}
-
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
+					nextMusic();
 				}
 			}
 		});
-		super.onCreate();
 	}
 
 	//サービス開始時に呼ばれる
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId){
-		onStartCommand(intent, flags, startId);
+		super.onStartCommand(intent, flags, startId);
+		this.startId = startId;
 		return START_STICKY;
 	}
 
@@ -77,6 +55,7 @@ public class MusicPlayerService extends Service{
 	@Override
 	public void onDestroy(){
 		shutdown();
+		super.onDestroy();
 	}
 
 	//バインド(接続時)に呼ばれる
@@ -93,9 +72,7 @@ public class MusicPlayerService extends Service{
 
 	//再バインド(再接続時)に呼ばれる
 	@Override
-	public void onRebind(Intent intent){
-
-	}
+	public void onRebind(Intent intent){}
 
 	//サービスに接続するためのBinder
 	public class ServiceLocalBinder extends Binder{
@@ -103,6 +80,18 @@ public class MusicPlayerService extends Service{
 		MusicPlayerService getService(){
 			return MusicPlayerService.this;
 		}
+	}
+
+	//Contextのセット
+	public void setContext(Context context){
+		this.context = context;
+	}
+
+	//Activityへトラックナンバーを通知する
+	public void sendTrackNumber(){
+		SheetActivity activity = (SheetActivity)context;
+		if(activity != null)
+			activity.setTrackNumber(trackNumber);
 	}
 
 	//SeekBarのセット
@@ -128,7 +117,13 @@ public class MusicPlayerService extends Service{
 			@Override
 			public void run() {
 				while(true){
+					if(mediaPlayer == null)
+						continue;
+
 					if(mediaPlayer.isPlaying() && !pauseFlag){
+						if(seekBar == null)
+							continue;
+
 						seekBar.setProgress(mediaPlayer.getCurrentPosition());
 						try{
 							Thread.sleep(1000);
@@ -141,20 +136,23 @@ public class MusicPlayerService extends Service{
 		}).start();
 	}
 
+	//SeekBarの有無
+	public boolean isSetSeekBar(){
+		return (seekBar == null)? false : true;
+	}
+
 	//楽曲のセット
-	public void setMusic(Context context, Uri uri){
-		this.context = context;
+	public void setMusic(Uri uri){
 		if(mediaPlayer == null)
 			return;
 
 		try {
 			mediaPlayer.setDataSource(context, uri);
 			setFlag = true;
-			if(playList != null){
-				trackNumber = playList.indexOf(uri);
-				if(trackNumber == -1) trackNumber = 0;
-			}else
-				trackNumber = 0;
+
+			trackNumber = playList.indexOf(uri);
+			System.out.println(trackNumber);
+			if(trackNumber == -1) trackNumber = 0;
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -174,6 +172,11 @@ public class MusicPlayerService extends Service{
 				if(!pauseFlag)
 					mediaPlayer.prepare();
 
+				if(seekBar != null){
+					seekBar.setProgress(0);
+					seekBar.setMax(mediaPlayer.getDuration());
+				}
+
 				mediaPlayer.start();
 				pauseFlag = false;
 			}catch (Exception e) {
@@ -188,6 +191,32 @@ public class MusicPlayerService extends Service{
 		if(setFlag){
 			mediaPlayer.pause();
 			pauseFlag = true;
+		}
+	}
+
+	//次の楽曲へ
+	public void nextMusic(){
+		mediaPlayer.reset();
+		trackNumber++;
+		if(playList != null)
+			if(trackNumber == playList.size())
+				trackNumber = 0;
+
+		System.out.println(trackNumber);
+		sendTrackNumber();
+
+		try {
+			mediaPlayer.setDataSource(context, playList.get(trackNumber));
+			mediaPlayer.prepare();
+			mediaPlayer.start();
+
+			if(seekBar != null){
+				seekBar.setProgress(0);
+				seekBar.setMax(mediaPlayer.getDuration());
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 

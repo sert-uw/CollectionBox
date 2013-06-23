@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.view.GestureDetector;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -41,6 +42,8 @@ public class SheetActivity extends Activity implements OnClickListener,
 	private ViewFlipper 	viewFlipper;//アニメーション用Viewオブジェクト
 	private LayoutInflater	inflater;//LayoutをViewとして取得する
 	private View			musicView;//sheet_music_layoutのView
+
+	private SeekBar			seekBar;//レイアウトのシークバー
 
 	private String			sheetName;//シート名
 
@@ -80,11 +83,27 @@ public class SheetActivity extends Activity implements OnClickListener,
 		sql = new MySQLite(this);
 		db = sql.getWritableDatabase();
 
-		doBindService();
+		Intent intent = new Intent(this, MusicPlayerService.class);
+		if(!isServiceRunning("vc.ddns.luna.sert.collectionbox.MusicPlayerService"))
+			doStartService(intent);
+
+		doBindService(intent);
 		setAnimations();
 		setLayout();
 		readData();
 
+	}
+
+	//バックキーが押されたときの処理
+	@Override
+	public boolean dispatchKeyEvent(KeyEvent e){
+		if(e.getAction() == KeyEvent.ACTION_DOWN){
+			if(e.getKeyCode() == KeyEvent.KEYCODE_BACK){
+				doUnbindService();
+				this.finish();
+			}
+		}
+		return super.dispatchKeyEvent(e);
 	}
 
 	//フリックによるアニメーションをセットする
@@ -163,6 +182,7 @@ public class SheetActivity extends Activity implements OnClickListener,
 		((ImageButton)musicView.findViewById(R.id.sheet_music_rewinding_button)).setOnClickListener(this);
 		((ImageButton)musicView.findViewById(R.id.sheet_music_fastForwarding_button)).setOnClickListener(this);
 
+		seekBar = (SeekBar)musicView.findViewById(R.id.sheet_music_seekBar);
 	}
 
 	//タグ用変数
@@ -302,6 +322,7 @@ public class SheetActivity extends Activity implements OnClickListener,
 		setLinearBg(false);
 		selectedNumber = number;
 		setLinearBg(true);
+		System.out.println(number);
 	}
 
 	/////////////////////////////////////////////////
@@ -313,6 +334,7 @@ public class SheetActivity extends Activity implements OnClickListener,
 
 		if(tag.equals("playBack")){
 			if(mpService != null){
+				setPlayList();
 				if(!mpService.isSetMusic())
 					setMusic();
 				startMusic();
@@ -328,10 +350,13 @@ public class SheetActivity extends Activity implements OnClickListener,
 				mpService.movePosition(0);
 
 		}else if(tag.equals("fastForwarding")){
+			if(mpService != null)
+				mpService.nextMusic();
 
 		}else {
 			setLinearBg(false);
 			selectedNumber = Integer.parseInt(tag.replaceAll("[^0-9]", ""));
+			setPlayList();
 			setMusic();
 			startMusic();
 		}
@@ -344,18 +369,22 @@ public class SheetActivity extends Activity implements OnClickListener,
 				mpService.moveToIdle();
 			StringTokenizer st = new StringTokenizer(musicData[selectedNumber], ",");
 			st.nextToken(); st.nextToken();
-			mpService.setMusic(SheetActivity.this, Uri.parse(st.nextToken()));
+			mpService.setMusic(Uri.parse(st.nextToken()));
 			setLinearBg(true);
 		}
 	}
 
+	//プレイリストのセット
+	private void setPlayList(){
+		mpService.setPlayList(musicPlayList);
+	}
+
 	//楽曲の再生
 	private void startMusic(){
-		if(!mpService.isSetPlayList())
-			mpService.setPlayList(musicPlayList);
+		if(!mpService.isSetSeekBar())
+			mpService.setSeekBar(seekBar);
 		mpService.startMusic();
 		//mpService.setLooping(true);
-		mpService.setSeekBar((SeekBar)findViewById(R.id.sheet_music_seekBar));
 		((ImageButton)findViewById(R.id.sheet_music_playBack_button)).setImageResource(R.drawable.button4);
 		findViewById(R.id.sheet_music_playBack_button).setTag("pause");
 	}
@@ -432,27 +461,50 @@ public class SheetActivity extends Activity implements OnClickListener,
 
 			//サービスにはIBinder経由で#getService()してダイレクトにアクセス可能
 			mpService = ((MusicPlayerService.ServiceLocalBinder)service).getService();
+
+			mpService.setContext(SheetActivity.this);
+			mpService.setSeekBar(seekBar);
+			mpService.sendTrackNumber();
 		}
 
 		public void onServiceDisconnected(ComponentName className){
 			//サービスとの切断(異常系処理)
 			//プロセスのクラッシュなど意図しないサービスの切断が発生した場合に呼ばれる
 			mpService = null;
+			doUnbindService();
 			//Toast.makeText(SheetActivity.this, "Activity:onServiceDisconnected", Toast.LENGTH_SHORT).show();
 		}
 	};
 
-	void doBindService(){
+	private void doStartService(Intent intent){
+		startService(intent);
+	}
+
+	private void doBindService(Intent intent){
 		//サービスとの接続を確立する　明示的にServiceを指定
-		bindService(new Intent(SheetActivity.this, MusicPlayerService.class), mConnection, Context.BIND_AUTO_CREATE);
+		bindService(intent, mConnection, BIND_AUTO_CREATE);
 		mIsBound = true;
 	}
 
-	void doUnbindService(){
+	private void doUnbindService(){
 		if(mIsBound){
 			//コネクションの解除
 			unbindService(mConnection);
 			mIsBound = false;
 		}
+	}
+
+	//サービスが起動中かどうかを調べる
+	private boolean isServiceRunning(String className){
+		ActivityManager am = (ActivityManager)getSystemService(ACTIVITY_SERVICE);
+		List<ActivityManager.RunningServiceInfo> serviceInfos =
+				am.getRunningServices(Integer.MAX_VALUE);
+
+		for(int i=0; i<serviceInfos.size(); i++){
+			if(serviceInfos.get(i).service.getClassName().equals(className)){
+				return true;
+			}
+		}
+		return false;
 	}
 }
