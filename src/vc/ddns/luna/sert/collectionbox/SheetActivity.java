@@ -54,6 +54,7 @@ public class SheetActivity extends Activity implements OnClickListener,
 
 	private List<Uri>		musicPlayList = new ArrayList<Uri>();//プレイリスト保持
 	private boolean		shuffleFlag;//シャッフルモードかどうか
+	private boolean		repeatFlag;//リピートするかどうか
 
 	private List<LinearLayout> musicList = new ArrayList<LinearLayout>();//楽曲一覧をListで保持
 	private int				selectedNumber = 0;//選択されてる楽曲番号を保持
@@ -201,6 +202,7 @@ public class SheetActivity extends Activity implements OnClickListener,
 		((ImageButton)musicView.findViewById(R.id.sheet_music_rewinding_button)).setOnClickListener(this);
 		((ImageButton)musicView.findViewById(R.id.sheet_music_fastForwarding_button)).setOnClickListener(this);
 		((ImageButton)musicView.findViewById(R.id.sheet_music_shuffle_button)).setOnClickListener(this);
+		((ImageButton)musicView.findViewById(R.id.sheet_music_repeat_button)).setOnClickListener(this);
 
 		seekBar = (SeekBar)musicView.findViewById(R.id.sheet_music_seekBar);
 	}
@@ -366,6 +368,7 @@ public class SheetActivity extends Activity implements OnClickListener,
 	public void onClick(View v) {
 		String tag = v.getTag().toString();
 
+		//再生ボタン処理
 		if(tag.equals("playBack")){
 			if(mpService != null && musicList.size() != 0){
 				setPlayList();
@@ -374,19 +377,31 @@ public class SheetActivity extends Activity implements OnClickListener,
 				startMusic();
 			}
 
-		}else if(tag.equals("pause")  && musicList.size() != 0){
+		}
+
+		//一時停止ボタン処理
+		else if(tag.equals("pause")  && musicList.size() != 0){
 			mpService.pauseMusic();
 			switchCenterButton("playBack");
 
-		}else if(tag.equals("rewinding")  && musicList.size() != 0){
+		}
+
+		//戻るボタン処理
+		else if(tag.equals("rewinding")  && musicList.size() != 0){
 			if(mpService != null)
 				mpService.rewinding();
 
-		}else if(tag.equals("fastForwarding")  && musicList.size() != 0){
+		}
+
+		//進むボタン処理
+		else if(tag.equals("fastForwarding")  && musicList.size() != 0){
 			if(mpService != null)
 				mpService.nextMusic();
 
-		}else if(tag.equals("shuffle")){
+		}
+
+		//シャッフルボタン処理
+		else if(tag.equals("shuffle")){
 			shuffleFlag = !shuffleFlag;
 			mpService.setShuffle(shuffleFlag);
 
@@ -399,7 +414,26 @@ public class SheetActivity extends Activity implements OnClickListener,
 				.setImageResource(R.drawable.button5_1);
 			}
 
-		}else {
+		}
+
+		//リピートボタン処理
+		else if(tag.equals("repeat")){
+			repeatFlag = !repeatFlag;
+			mpService.setLooping(repeatFlag);
+
+			if(repeatFlag){
+				((ImageButton)findViewById(R.id.sheet_music_repeat_button))
+				.setImageResource(R.drawable.button6_2);
+
+			}else {
+				((ImageButton)findViewById(R.id.sheet_music_repeat_button))
+				.setImageResource(R.drawable.button6_1);
+			}
+
+		}
+
+		//選曲処理
+		else {
 			if(musicList.size() != 0){
 				setLinearBg(false);
 				selectedNumber = Integer.parseInt(tag.replaceAll("[^0-9]", ""));

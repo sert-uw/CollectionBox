@@ -20,5 +20,6 @@
     <color name="Black">#000000</color>
     <color name="White">#FFFFFF</color>
     <color name="TranslucentBlack">#96000000</color>
+    <color name="SkyBlue">#29B6FF</color>
 
 </resources>

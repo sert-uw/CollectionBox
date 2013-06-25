@@ -29,6 +29,7 @@ public class MusicPlayerService extends Service{
 	private MediaPlayer	mediaPlayer;//音楽再生用
 	private boolean		setFlag = false;//楽曲のセットが完了したかどうか
 	private boolean		pauseFlag = false;//一時停止しているかどうか
+	private boolean		repeatFlag = false;//リピートフラグ
 	private boolean		stop = false;//ストップフラグ
 	private SeekBar		seekBar;//レイアウトのSeekBar
 	private List<Uri>	playList = new ArrayList<Uri>();//プレイリスト
@@ -49,7 +50,7 @@ public class MusicPlayerService extends Service{
 
 			@Override
 			public void onCompletion(MediaPlayer mp) {
-				if(!mediaPlayer.isLooping() && playList.size() != 0){
+				if(!repeatFlag && playList.size() != 0){
 					nextMusic();
 				}
 			}
@@ -233,7 +234,7 @@ public class MusicPlayerService extends Service{
 
 		seekLoopFlag = true;
 
-		/*new Thread(new Runnable() {
+		new Thread(new Runnable() {
 			@Override
 			public void run() {
 				while(seekLoopFlag){
@@ -253,7 +254,7 @@ public class MusicPlayerService extends Service{
 					}
 				}
 			}
-		}).start();*/
+		}).start();
 	}
 
 	//SeekBarの有無
@@ -337,6 +338,8 @@ public class MusicPlayerService extends Service{
 
 			sendTrackNumber();
 
+			mediaPlayer.setLooping(repeatFlag);
+
 			try {
 				if(shuffleFlag)
 					mediaPlayer.setDataSource(context, playList.get(shuffleList[trackNumber]));
@@ -360,6 +363,8 @@ public class MusicPlayerService extends Service{
 				trackNumber = 0;
 
 		sendTrackNumber();
+
+		mediaPlayer.setLooping(repeatFlag);
 
 		try {
 			if(shuffleFlag)
@@ -413,6 +418,12 @@ public class MusicPlayerService extends Service{
 	//楽曲のループ設定
 	public void setLooping(boolean flag){
 		mediaPlayer.setLooping(flag);
+		repeatFlag = flag;
+	}
+
+	//楽曲のループ設定取得
+	public boolean isLooping(){
+		return mediaPlayer.isLooping();
 	}
 
 	//楽曲がセットされているか
