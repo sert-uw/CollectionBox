@@ -7,8 +7,10 @@ import java.util.StringTokenizer;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.ContentResolver;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
@@ -31,6 +33,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ViewFlipper;
 
 public class SheetActivity extends Activity implements OnClickListener,
@@ -52,9 +55,11 @@ public class SheetActivity extends Activity implements OnClickListener,
 	private String[]		pictureData;//画像データ
 	private String			musicSequence;//音楽の再生順番定義
 
+	private boolean			deleteFlag;//楽曲の削除モード
+
 	private List<Uri>		musicPlayList = new ArrayList<Uri>();//プレイリスト保持
-	private boolean		shuffleFlag;//シャッフルモードかどうか
-	private boolean		repeatFlag;//リピートするかどうか
+	private boolean			shuffleFlag;//シャッフルモードかどうか
+	private boolean			repeatFlag;//リピートするかどうか
 
 	private List<LinearLayout> musicList = new ArrayList<LinearLayout>();//楽曲一覧をListで保持
 	private int				selectedNumber = 0;//選択されてる楽曲番号を保持
@@ -140,6 +145,9 @@ public class SheetActivity extends Activity implements OnClickListener,
 				AnimationUtils.loadAnimation(this, R.anim.left_out);
 	}
 
+	//タグ用変数
+	private int count = 0;
+
 	//データベースから読み込む
 	private void readData(){
 		musicData = sql.searchDataBySheetNameAndType(db, sheetName, "music");
@@ -174,6 +182,8 @@ public class SheetActivity extends Activity implements OnClickListener,
             list.add(file.getName());
 		}
 
+		count = 0;
+
 		musicPlayList.removeAll(musicPlayList);
 		StringTokenizer st = new StringTokenizer(musicSequence, "/");
 		for(int i=0; i<list.size(); i++){
@@ -206,9 +216,6 @@ public class SheetActivity extends Activity implements OnClickListener,
 
 		seekBar = (SeekBar)musicView.findViewById(R.id.sheet_music_seekBar);
 	}
-
-	//タグ用変数
-	private int count = 0;
 
 	//音楽情報を読み込み、scrollViewに追加する
 	private void readMusicData(String searchKey, String[] searchValue){
@@ -269,14 +276,32 @@ public class SheetActivity extends Activity implements OnClickListener,
         }
 	}
 
+	//ダイアログの表示
+	/*title:Dialogのタイトル        view:Dialogに埋め込むView
+	  ptext:Positiveボタンの文字列  ntext:Negativeボタンの文字列
+	  listener:ボタンのイベントリスナー
+	*/
+	private void createDialog(String title, View view,
+			String ptext, String ntext,
+			DialogInterface.OnClickListener listener) {
+		AlertDialog.Builder ad = new AlertDialog.Builder(this);
+		ad.setTitle(title);
+		ad.setView(view);
+		ad.setPositiveButton(ptext, listener);
+		ad.setNegativeButton(ntext, listener);
+		ad.show();
+	}
+
 	//メニューの作成
 	private final static int MENU_ITEM0 = 0;
+	private final static int MENU_ITEM1 = 1;
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
 
 		MenuItem item0 = menu.add(0, MENU_ITEM0, 0, "楽曲追加");
+		MenuItem item1 = menu.add(0, MENU_ITEM1, 1, "楽曲削除/削除解除");
 
 		return true;
 	}
@@ -290,6 +315,14 @@ public class SheetActivity extends Activity implements OnClickListener,
 			intent.setType("audio/*");
 			intent.setAction(Intent.ACTION_GET_CONTENT);
 			startActivityForResult(intent, REQUEST_MUSIC);
+			break;
+
+		case MENU_ITEM1:
+			deleteFlag = !deleteFlag;
+
+			changeDelModView();
+			Toast.makeText(SheetActivity.this, "削除する楽曲を選択してください。", Toast.LENGTH_SHORT).show();
+
 			break;
 		default: break;
 
@@ -331,15 +364,37 @@ public class SheetActivity extends Activity implements OnClickListener,
 		}
 	}
 
+	//Deleteモードの見た目切り替え
+	private void changeDelModView(){
+		if(musicList.size() == 0)
+			return;
+
+		//削除フラグによって色を変更
+		for(int i=0; i<musicList.size(); i++){
+			if(deleteFlag)
+				musicList.get(i).setBackgroundResource(R.drawable.under_line_delete);
+			else
+				musicList.get(i).setBackgroundResource(R.drawable.under_line);
+		}
+		setLinearBg(true);
+	}
+
 	//musicListの背景制御
 	private void setLinearBg(boolean switching){
 		if(musicList.size() == 0)
 			return;
 
-		if(switching)
-			musicList.get(selectedNumber).setBackgroundResource(R.drawable.under_line2);
-		else
-			musicList.get(selectedNumber).setBackgroundResource(R.drawable.under_line);
+		if(deleteFlag){
+			if(switching)
+				musicList.get(selectedNumber).setBackgroundResource(R.drawable.under_line2_delete);
+			else
+				musicList.get(selectedNumber).setBackgroundResource(R.drawable.under_line_delete);
+		}else {
+			if(switching)
+				musicList.get(selectedNumber).setBackgroundResource(R.drawable.under_line2);
+			else
+				musicList.get(selectedNumber).setBackgroundResource(R.drawable.under_line);
+		}
 	}
 
 	//再生ボタンと一時停止ボタンの切り替え
@@ -432,9 +487,15 @@ public class SheetActivity extends Activity implements OnClickListener,
 
 		}
 
-		//選曲処理
+		//選曲/削除処理
 		else {
-			if(musicList.size() != 0){
+			if(deleteFlag){
+				setLinearBg(false);
+				selectedNumber = Integer.parseInt(tag.replaceAll("[^0-9]", ""));
+				setLinearBg(true);
+				deleteMusic();
+
+			}else if(musicList.size() != 0){
 				setLinearBg(false);
 				selectedNumber = Integer.parseInt(tag.replaceAll("[^0-9]", ""));
 				setPlayList();
@@ -442,6 +503,79 @@ public class SheetActivity extends Activity implements OnClickListener,
 				startMusic();
 			}
 		}
+	}
+
+	//楽曲の削除
+	private void deleteMusic(){
+		ContentResolver cr = getContentResolver();
+        String[] columns = {MediaStore.Images.Media.DATA };
+        Cursor c = cr.query(musicPlayList.get(selectedNumber), columns, null, null, null);
+
+        c.moveToFirst();
+        File file = new File(c.getString(0));
+
+        ContentResolver resolver = getContentResolver();
+        Cursor cursor = resolver.query(
+        		MediaStore.Audio.Media.EXTERNAL_CONTENT_URI ,  //データの種類
+        		new String[]{
+        				MediaStore.Audio.Media.TITLE,
+        				MediaStore.Audio.Media.ARTIST ,
+        				MediaStore.Audio.Media.ALBUM,
+        		},
+        		MediaStore.Audio.Media.DISPLAY_NAME + " = ?",
+        		new String[]{file.getName()},
+        		null   //並べ替え
+        );
+
+        if(!cursor.moveToNext())
+        	return;
+
+        final TextView text = new TextView(this);
+        text.setText(cursor.getString( cursor.getColumnIndex( MediaStore.Audio.Media.TITLE )));
+        text.setTag(musicPlayList.get(selectedNumber));
+        text.setTextSize(26);
+
+		createDialog("削除しますか？", text, "delete", "cancel",
+				new DialogInterface.OnClickListener() {
+
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						if(which == DialogInterface.BUTTON_POSITIVE){
+							Uri delUri = Uri.parse(text.getTag().toString());
+							sql.deleteEntry(db, "sheetData",
+									"sheetName = ? and dataType = ? and data = ?",
+									new String[]{sheetName, "music", delUri.toString()});
+
+							musicPlayList.remove(delUri);
+				            String list = "";
+
+				            for(int i=0; i<musicPlayList.size(); i++){
+				            	ContentResolver cr = getContentResolver();
+				            	String[] columns = {MediaStore.Images.Media.DATA };
+				            	Cursor c = cr.query(musicPlayList.get(i), columns, null, null, null);
+
+				            	c.moveToFirst();
+				            	File file = new File(c.getString(0));
+
+				            	list += file.getName();
+				            	if(i != musicPlayList.size() - 1)
+				            		list += "/";
+				            }
+
+				            String[] addData = new String[]{sheetName, "musicSequence", list};
+				            sql.upDateEntry(db, "sheetData", "dataType = ?",
+				            		new String[]{"musicSequence"}, addData);
+
+				            readData();
+
+				            deleteFlag = false;
+							changeDelModView();
+						}else if(which == DialogInterface.BUTTON_NEGATIVE){
+							deleteFlag = false;
+							changeDelModView();
+						}
+					}
+				});
 	}
 
 	//楽曲のセット
