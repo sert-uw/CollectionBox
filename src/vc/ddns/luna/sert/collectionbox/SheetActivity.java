@@ -51,7 +51,9 @@ public class SheetActivity extends Activity implements OnClickListener,
 	private String[]		musicData;//音楽データ
 	private String[]		pictureData;//画像データ
 	private String			musicSequence;//音楽の再生順番定義
+
 	private List<Uri>		musicPlayList = new ArrayList<Uri>();//プレイリスト保持
+	private boolean		shuffleFlag;//シャッフルモードかどうか
 
 	private List<LinearLayout> musicList = new ArrayList<LinearLayout>();//楽曲一覧をListで保持
 	private int				selectedNumber = 0;//選択されてる楽曲番号を保持
@@ -89,11 +91,10 @@ public class SheetActivity extends Activity implements OnClickListener,
 		if(!isServiceRunning("vc.ddns.luna.sert.collectionbox.MusicPlayerService"))
 			doStartService(intent);
 
+		setLayout();
 		doBindService(intent);
 		setAnimations();
-		setLayout();
 		readData();
-
 	}
 
 	//バックキーが押されたときの処理
@@ -172,7 +173,6 @@ public class SheetActivity extends Activity implements OnClickListener,
             list.add(file.getName());
 		}
 
-		System.out.println(musicSequence);
 		musicPlayList.removeAll(musicPlayList);
 		StringTokenizer st = new StringTokenizer(musicSequence, "/");
 		for(int i=0; i<list.size(); i++){
@@ -189,8 +189,7 @@ public class SheetActivity extends Activity implements OnClickListener,
 
 		setLinearBg(true);
 
-		if(mpService != null)
-			mpService.setPlayList(musicPlayList);
+		setPlayList();
 	}
 
 	//Layoutのセットを行う
@@ -201,6 +200,7 @@ public class SheetActivity extends Activity implements OnClickListener,
 		((ImageButton)musicView.findViewById(R.id.sheet_music_playBack_button)).setOnClickListener(this);
 		((ImageButton)musicView.findViewById(R.id.sheet_music_rewinding_button)).setOnClickListener(this);
 		((ImageButton)musicView.findViewById(R.id.sheet_music_fastForwarding_button)).setOnClickListener(this);
+		((ImageButton)musicView.findViewById(R.id.sheet_music_shuffle_button)).setOnClickListener(this);
 
 		seekBar = (SeekBar)musicView.findViewById(R.id.sheet_music_seekBar);
 	}
@@ -357,7 +357,6 @@ public class SheetActivity extends Activity implements OnClickListener,
 		setLinearBg(false);
 		selectedNumber = number;
 		setLinearBg(true);
-		System.out.println(number);
 	}
 
 	/////////////////////////////////////////////////
@@ -381,11 +380,24 @@ public class SheetActivity extends Activity implements OnClickListener,
 
 		}else if(tag.equals("rewinding")  && musicList.size() != 0){
 			if(mpService != null)
-				mpService.movePosition(0);
+				mpService.rewinding();
 
 		}else if(tag.equals("fastForwarding")  && musicList.size() != 0){
 			if(mpService != null)
 				mpService.nextMusic();
+
+		}else if(tag.equals("shuffle")){
+			shuffleFlag = !shuffleFlag;
+			mpService.setShuffle(shuffleFlag);
+
+			if(shuffleFlag){
+				((ImageButton)findViewById(R.id.sheet_music_shuffle_button))
+				.setImageResource(R.drawable.button5_2);
+
+			}else {
+				((ImageButton)findViewById(R.id.sheet_music_shuffle_button))
+				.setImageResource(R.drawable.button5_1);
+			}
 
 		}else {
 			if(musicList.size() != 0){
@@ -412,7 +424,8 @@ public class SheetActivity extends Activity implements OnClickListener,
 
 	//プレイリストのセット
 	private void setPlayList(){
-		mpService.setPlayList(musicPlayList);
+		if(mpService != null)
+			mpService.setPlayList(musicPlayList);
 	}
 
 	//楽曲の再生
@@ -420,7 +433,6 @@ public class SheetActivity extends Activity implements OnClickListener,
 		if(!mpService.isSetSeekBar())
 			mpService.setSeekBar(seekBar);
 		mpService.startMusic();
-		//mpService.setLooping(true);
 		switchCenterButton("pause");
 	}
 
@@ -497,11 +509,13 @@ public class SheetActivity extends Activity implements OnClickListener,
 			//サービスにはIBinder経由で#getService()してダイレクトにアクセス可能
 			mpService = ((MusicPlayerService.ServiceLocalBinder)service).getService();
 
+			//サービスが起動済みの時、別のシートのサービスであるならば再起動する
 			if(!mpService.setNames(boxName, sheetName)){
-					doUnbindService();
-					mpService.shutdown();
-					doStartService(new Intent(SheetActivity.this, MusicPlayerService.class));
-					doBindService(new Intent(SheetActivity.this, MusicPlayerService.class));
+				mpService.shutdown();
+				doUnbindService();
+				doStartService(new Intent(SheetActivity.this, MusicPlayerService.class));
+				doBindService(new Intent(SheetActivity.this, MusicPlayerService.class));
+				return;
 			}
 			mpService.setContext(SheetActivity.this);
 			mpService.setSeekBar(seekBar);

@@ -3,6 +3,7 @@ package vc.ddns.luna.sert.collectionbox;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -31,10 +32,13 @@ public class MusicPlayerService extends Service{
 	private boolean		stop = false;//ストップフラグ
 	private SeekBar		seekBar;//レイアウトのSeekBar
 	private List<Uri>	playList = new ArrayList<Uri>();//プレイリスト
+	private int[]		shuffleList;//シャッフルプレイリスト保持
+	private boolean		shuffleFlag;//シャッフルモードかどうか
 	private int			trackNumber;//再生しているトラックナンバー
 	private Context		context;
 	private String		boxName = null;
 	private String		sheetName = null;
+	private boolean		seekLoopFlag;//シークバー制御スレッド
 
 	//サービス生成時に呼ばれる
 	@Override
@@ -76,6 +80,7 @@ public class MusicPlayerService extends Service{
 	//バインド解除(切断時)に呼ばれる
 	@Override
 	public boolean onUnbind(Intent intent){
+		seekLoopFlag = false;
 		return true;
 	}
 
@@ -115,16 +120,26 @@ public class MusicPlayerService extends Service{
 	//Activityへトラックナンバーを通知する
 	public void sendTrackNumber(){
 		SheetActivity activity = (SheetActivity)context;
-		if(activity != null)
-			activity.setTrackNumber(trackNumber);
+		if(activity != null){
+			if(shuffleFlag)
+				activity.setTrackNumber(shuffleList[trackNumber]);
+			else
+				activity.setTrackNumber(trackNumber);
+		}
 	}
 
 	// ノーティフィケーションの表示
 	private void showNotification() {
 
 		//情報取得
+		Uri uri;
+		if(shuffleFlag)
+			uri = playList.get(shuffleList[trackNumber]);
+		else
+			uri = playList.get(trackNumber);
+
 		String[] detail = getMusicDetail(MediaStore.Audio.Media.DISPLAY_NAME + " = ?",
-				new String[]{getFileName(playList.get(trackNumber))});
+				new String[]{getFileName(uri)});
 
 		// ノティフィケーションオブジェクトの生成
 		Notification notif = new Notification(
@@ -196,7 +211,7 @@ public class MusicPlayerService extends Service{
 
 	//SeekBarのセット
 	public void setSeekBar(SeekBar seekbar){
-		if(seekBar == null)
+		if(seekbar == null)
 			return;
 
 		seekBar = seekbar;
@@ -216,10 +231,12 @@ public class MusicPlayerService extends Service{
 			}
 		});
 
-		new Thread(new Runnable() {
+		seekLoopFlag = true;
+
+		/*new Thread(new Runnable() {
 			@Override
 			public void run() {
-				while(true){
+				while(seekLoopFlag){
 					if(mediaPlayer == null)
 						continue;
 
@@ -236,7 +253,7 @@ public class MusicPlayerService extends Service{
 					}
 				}
 			}
-		}).start();
+		}).start();*/
 	}
 
 	//SeekBarの有無
@@ -297,6 +314,43 @@ public class MusicPlayerService extends Service{
 		}
 	}
 
+	//巻き戻し
+	public void rewinding(){
+		if(mediaPlayer == null)
+			return;
+
+		int sec = 0;
+
+		if(mediaPlayer.isPlaying())
+			sec = mediaPlayer.getCurrentPosition() / 1000;
+
+		if(sec < 10){
+			mediaPlayer.reset();
+			trackNumber--;
+			if(trackNumber < 0){
+				if(playList != null)
+					trackNumber = playList.size() - 1;
+
+				if(trackNumber < 0)
+					trackNumber = 0;
+			}
+
+			sendTrackNumber();
+
+			try {
+				if(shuffleFlag)
+					mediaPlayer.setDataSource(context, playList.get(shuffleList[trackNumber]));
+				else
+					mediaPlayer.setDataSource(context, playList.get(trackNumber));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			startMusic();
+		}else
+			this.movePosition(0);
+	}
+
 	//次の楽曲へ
 	public void nextMusic(){
 		mediaPlayer.reset();
@@ -305,11 +359,13 @@ public class MusicPlayerService extends Service{
 			if(trackNumber == playList.size())
 				trackNumber = 0;
 
-		System.out.println(trackNumber);
 		sendTrackNumber();
 
 		try {
-			mediaPlayer.setDataSource(context, playList.get(trackNumber));
+			if(shuffleFlag)
+				mediaPlayer.setDataSource(context, playList.get(shuffleList[trackNumber]));
+			else
+				mediaPlayer.setDataSource(context, playList.get(trackNumber));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -326,6 +382,32 @@ public class MusicPlayerService extends Service{
 	//楽曲が再生されているかどうか
 	public boolean isPlaying(){
 		return mediaPlayer.isPlaying();
+	}
+
+	//シャッフルの設定
+	public void setShuffle(boolean flag){
+		shuffleFlag = flag;
+
+		if(shuffleFlag){
+			boolean[] countFlag = new boolean[playList.size()];
+			shuffleList = new int[playList.size()];
+			int count = 0;
+			Random rnd = new Random();
+			while(true){
+				int number = rnd.nextInt(playList.size());
+				if(countFlag[number])
+					continue;
+
+				countFlag[number] = true;
+				shuffleList[count] = number;
+				count++;
+
+				if(count == countFlag.length)
+					break;
+			}
+		}else {
+			trackNumber = shuffleList[trackNumber];
+		}
 	}
 
 	//楽曲のループ設定
@@ -360,11 +442,14 @@ public class MusicPlayerService extends Service{
 
 	//終了処理
 	public void shutdown(){
-	    if (mediaPlayer != null) {
+		seekLoopFlag = false;
+
+		if (mediaPlayer != null) {
 	        mediaPlayer.reset();
 	        mediaPlayer.release();
 	        mediaPlayer = null;
 	    }
+
 	    this.stopSelf(startId);
 
 		// ノーティフィケーションマネージャの取得

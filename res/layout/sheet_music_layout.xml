@@ -90,6 +90,18 @@
                 android:src="@drawable/button2"
                 android:tag="fastForwarding" />
 
+            <ImageButton
+                android:id="@+id/sheet_music_shuffle_button"
+                android:layout_width="75dp"
+                android:layout_height="75dp"
+                android:layout_marginLeft="@dimen/activity_horizontal_margin"
+                android:layout_marginRight="@dimen/activity_horizontal_margin"
+                android:layout_weight="1.0"
+                android:background="@drawable/dummy"
+                android:scaleType="fitCenter"
+                android:src="@drawable/button5_1"
+                android:tag="shuffle" />
+
         </LinearLayout>
 
     </LinearLayout>
