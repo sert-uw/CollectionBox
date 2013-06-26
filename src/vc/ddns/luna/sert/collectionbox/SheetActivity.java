@@ -10,6 +10,7 @@ import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -29,6 +30,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -44,7 +47,9 @@ public class SheetActivity extends Activity implements OnClickListener,
 	private GestureDetector	gestureDetector; //GestureDetectorオブジェクト
 	private ViewFlipper 	viewFlipper;//アニメーション用Viewオブジェクト
 	private LayoutInflater	inflater;//LayoutをViewとして取得する
+
 	private View			musicView;//sheet_music_layoutのView
+	private View			searchView;//検索結果レイアウト
 
 	private SeekBar			seekBar;//レイアウトのシークバー
 
@@ -180,6 +185,8 @@ public class SheetActivity extends Activity implements OnClickListener,
             File file = new File(c.getString(0));
 
             list.add(file.getName());
+
+            c.close();
 		}
 
 		count = 0;
@@ -274,6 +281,8 @@ public class SheetActivity extends Activity implements OnClickListener,
 
         	break;
         }
+
+        cursor.close();
 	}
 
 	//ダイアログの表示
@@ -282,13 +291,19 @@ public class SheetActivity extends Activity implements OnClickListener,
 	  listener:ボタンのイベントリスナー
 	*/
 	private void createDialog(String title, View view,
-			String ptext, String ntext,
+			String ptext, String neuText, String negText,
 			DialogInterface.OnClickListener listener) {
 		AlertDialog.Builder ad = new AlertDialog.Builder(this);
-		ad.setTitle(title);
-		ad.setView(view);
-		ad.setPositiveButton(ptext, listener);
-		ad.setNegativeButton(ntext, listener);
+		if(title != null)
+			ad.setTitle(title);
+		if(view != null)
+			ad.setView(view);
+		if(ptext != null)
+			ad.setPositiveButton(ptext, listener);
+		if(neuText != null)
+			ad.setNeutralButton(neuText, listener);
+		if(negText != null)
+			ad.setNegativeButton(negText, listener);
 		ad.show();
 	}
 
@@ -311,10 +326,53 @@ public class SheetActivity extends Activity implements OnClickListener,
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case MENU_ITEM0:
-			Intent intent = new Intent();
-			intent.setType("audio/*");
-			intent.setAction(Intent.ACTION_GET_CONTENT);
-			startActivityForResult(intent, REQUEST_MUSIC);
+			final View searchView = inflater.inflate(R.layout.search_dialog, null);
+			createDialog("楽曲検索", searchView, "検索", "一覧から探す", "閉じる",
+					new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+							if(paramInt == DialogInterface.BUTTON_POSITIVE){
+								String title = ((TextView)searchView.findViewById(R.id.search_dialog_title))
+										.getText().toString();
+								String artist = ((TextView)searchView.findViewById(R.id.search_dialog_artist))
+										.getText().toString();
+								String album = ((TextView)searchView.findViewById(R.id.search_dialog_album))
+										.getText().toString();
+
+								String searchStr = "";
+								String[] value = new String[3];
+								int count = 0;
+
+								if(!title.equals("")){
+									searchStr += MediaStore.Audio.Media.DISPLAY_NAME + " = ?";
+									value[count] = title;
+									count++;
+								}
+								if(!artist.equals("")){
+									searchStr += MediaStore.Audio.Media.ARTIST + " = ?";
+									value[count] = artist;
+									count++;
+								}
+								if(!album.equals("")){
+									searchStr += MediaStore.Audio.Media.ALBUM + " = ?";
+									value[count] = album;
+									count++;
+								}
+
+								String[] searchValue = new String[count];
+								for(int i=0; i<count; i++)
+									searchValue[i] = value[i];
+
+								setSearchResult(searchStr, searchValue);
+
+							}else if(paramInt == DialogInterface.BUTTON_NEUTRAL){
+								Intent intent = new Intent();
+								intent.setType("audio/*");
+								intent.setAction(Intent.ACTION_GET_CONTENT);
+								startActivityForResult(intent, REQUEST_MUSIC);
+							}
+						}
+					});
 			break;
 
 		case MENU_ITEM1:
@@ -353,6 +411,8 @@ public class SheetActivity extends Activity implements OnClickListener,
 	            	list += file.getName();
 	            	if(i != musicPlayList.size() - 1)
 	            		list += "/";
+
+	            	 c.close();
 	            }
 
 	            addData = new String[]{sheetName, "musicSequence", list};
@@ -362,6 +422,115 @@ public class SheetActivity extends Activity implements OnClickListener,
 	            readData();
 			}
 		}
+	}
+
+	//検索結果画面処理
+	private void setSearchResult(String searchStr, String[] searchValue){
+		ContentResolver resolver = getContentResolver();
+
+        Cursor cursor = resolver.query(
+        		MediaStore.Audio.Media.EXTERNAL_CONTENT_URI ,  //データの種類
+        		new String[]{
+        				MediaStore.Audio.Media.ALBUM ,
+        				MediaStore.Audio.Media.ARTIST ,
+        				MediaStore.Audio.Media.TITLE,
+        				MediaStore.Audio.Media._ID
+        		},    // keys for select. null means all
+        		searchStr,
+        		searchValue,
+        		null   //並べ替え
+        );
+
+        searchView = inflater.inflate(R.layout.search_result, null);
+        LinearLayout scrollLinear = (LinearLayout)searchView.findViewById(R.id.search_result_scrollLinear);
+
+        int setCount = 0;
+        final List<View> itemViewList = new ArrayList<View>();
+
+        View.OnClickListener clickListener = new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				String tag = v.getTag().toString();
+
+				if(tag.equals("add")){
+					for(int i=0; i<itemViewList.size(); i++){
+						CheckBox check = (CheckBox)itemViewList.get(i)
+								.findViewById(R.id.search_result_item_check);
+						if(check.isChecked()){
+							Uri uri = Uri.parse(check.getTag().toString());
+
+				            String[] addData = new String[]{sheetName, "music", uri.toString()};
+				            sql.createNewData(db, "sheetData", addData);
+
+				            musicPlayList.add(uri);
+						}
+					}
+
+					String list = "";
+
+		            for(int i=0; i<musicPlayList.size(); i++){
+		            	ContentResolver cr = getContentResolver();
+		            	String[] columns = {MediaStore.Images.Media.DATA };
+		            	Cursor c = cr.query(musicPlayList.get(i), columns, null, null, null);
+
+		            	c.moveToFirst();
+		            	File file = new File(c.getString(0));
+
+		            	list += file.getName();
+		            	if(i != musicPlayList.size() - 1)
+		            		list += "/";
+
+		            	 c.close();
+		            }
+
+		            String[] addData = new String[]{sheetName, "musicSequence", list};
+		            sql.upDateEntry(db, "sheetData", "dataType = ?",
+		            		new String[]{"musicSequence"}, addData);
+
+		            SheetActivity.this.setContentView(viewFlipper);
+		            readData();
+
+				}else {
+					int number = Integer.parseInt(tag.replaceAll("[^0-9]", ""));
+					CheckBox checkBox = (CheckBox)v.findViewById(R.id.search_result_item_check);
+					checkBox.setChecked(!checkBox.isChecked());
+				}
+			}
+		};
+
+		((Button)searchView.findViewById(R.id.search_result_addButton)).setOnClickListener(clickListener);
+
+        while( cursor.moveToNext() ){
+        	View itemView = inflater.inflate(R.layout.search_result_item_view, null);
+
+        	TextView titleView = (TextView)itemView.findViewById(R.id.search_result_item_title);
+        	TextView artistView = (TextView)itemView.findViewById(R.id.search_result_item_artist);
+        	TextView albumView = (TextView)itemView.findViewById(R.id.search_result_item_album);
+
+        	titleView.setText(cursor.getString( cursor.getColumnIndex( MediaStore.Audio.Media.TITLE )));
+        	artistView.setText(cursor.getString( cursor.getColumnIndex( MediaStore.Audio.Media.ARTIST )));
+        	albumView.setText(cursor.getString( cursor.getColumnIndex( MediaStore.Audio.Media.ALBUM )));
+        	Uri uri = ContentUris.withAppendedId(
+        			MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+        			Integer.parseInt(cursor.getString( cursor.getColumnIndex( MediaStore.Audio.Media._ID ))));
+
+        	itemView.findViewById(R.id.search_result_item_check).setTag(uri.toString());
+
+        	itemView.setOnClickListener(clickListener);
+        	itemView.setTag("" + setCount);
+        	setCount++;
+
+        	LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+        			LinearLayout.LayoutParams.MATCH_PARENT,
+        			LinearLayout.LayoutParams.WRAP_CONTENT);
+        	params.setMargins(0, 30, 0, 0);
+
+        	scrollLinear.addView(itemView, params);
+        	itemViewList.add(itemView);
+        }
+
+        cursor.close();
+        SheetActivity.this.setContentView(searchView);
 	}
 
 	//Deleteモードの見た目切り替え
@@ -514,6 +683,8 @@ public class SheetActivity extends Activity implements OnClickListener,
         c.moveToFirst();
         File file = new File(c.getString(0));
 
+        c.close();
+
         ContentResolver resolver = getContentResolver();
         Cursor cursor = resolver.query(
         		MediaStore.Audio.Media.EXTERNAL_CONTENT_URI ,  //データの種類
@@ -535,7 +706,9 @@ public class SheetActivity extends Activity implements OnClickListener,
         text.setTag(musicPlayList.get(selectedNumber));
         text.setTextSize(26);
 
-		createDialog("削除しますか？", text, "delete", "cancel",
+        cursor.close();
+
+		createDialog("削除しますか？", text, "delete", null, "cancel",
 				new DialogInterface.OnClickListener() {
 
 					@Override
@@ -560,6 +733,8 @@ public class SheetActivity extends Activity implements OnClickListener,
 				            	list += file.getName();
 				            	if(i != musicPlayList.size() - 1)
 				            		list += "/";
+
+				            	 c.close();
 				            }
 
 				            String[] addData = new String[]{sheetName, "musicSequence", list};
