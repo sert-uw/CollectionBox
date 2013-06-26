@@ -687,9 +687,8 @@ public class SheetActivity extends Activity implements OnClickListener,
 				doBindService(new Intent(SheetActivity.this, MusicPlayerService.class));
 				return;
 			}
-			mpService.setContext(SheetActivity.this);
-			mpService.setSeekBar(seekBar);
-			mpService.sendTrackNumber();
+
+			recoveryViews();
 
 			switchCenterButton((mpService.isPlaying())? "pause":"playBack");
 		}
@@ -702,6 +701,31 @@ public class SheetActivity extends Activity implements OnClickListener,
 			//Toast.makeText(SheetActivity.this, "Activity:onServiceDisconnected", Toast.LENGTH_SHORT).show();
 		}
 	};
+
+	//Bind完了後Viewの復元
+	private void recoveryViews(){
+		mpService.setContext(SheetActivity.this);
+		mpService.setSeekBar(seekBar);
+		mpService.sendTrackNumber();
+
+		if(mpService.isShuffle()){
+			((ImageButton)findViewById(R.id.sheet_music_shuffle_button))
+			.setImageResource(R.drawable.button5_2);
+
+		}else {
+			((ImageButton)findViewById(R.id.sheet_music_shuffle_button))
+			.setImageResource(R.drawable.button5_1);
+		}
+
+		if(mpService.isLooping()){
+			((ImageButton)findViewById(R.id.sheet_music_repeat_button))
+			.setImageResource(R.drawable.button6_2);
+
+		}else {
+			((ImageButton)findViewById(R.id.sheet_music_repeat_button))
+			.setImageResource(R.drawable.button6_1);
+		}
+	}
 
 	private void doStartService(Intent intent){
 		startService(intent);

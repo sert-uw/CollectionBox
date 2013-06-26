@@ -36,6 +36,7 @@ public class MusicPlayerService extends Service{
 	private int[]		shuffleList;//シャッフルプレイリスト保持
 	private boolean		shuffleFlag;//シャッフルモードかどうか
 	private int			trackNumber;//再生しているトラックナンバー
+	private int			beforeChangeNumber;//シャッフルのON/OFFが行われた瞬間のトラックナンバー
 	private Context		context;
 	private String		boxName = null;
 	private String		sheetName = null;
@@ -51,6 +52,8 @@ public class MusicPlayerService extends Service{
 			@Override
 			public void onCompletion(MediaPlayer mp) {
 				if(!repeatFlag && playList.size() != 0){
+					if(beforeChangeNumber != -1)
+						beforeChangeNumber = -1;
 					nextMusic();
 				}
 			}
@@ -122,10 +125,14 @@ public class MusicPlayerService extends Service{
 	public void sendTrackNumber(){
 		SheetActivity activity = (SheetActivity)context;
 		if(activity != null){
-			if(shuffleFlag)
-				activity.setTrackNumber(shuffleList[trackNumber]);
-			else
-				activity.setTrackNumber(trackNumber);
+			if(beforeChangeNumber != -1)
+				activity.setTrackNumber(beforeChangeNumber);
+			else {
+				if(shuffleFlag)
+					activity.setTrackNumber(shuffleList[trackNumber]);
+				else
+					activity.setTrackNumber(trackNumber);
+			}
 		}
 	}
 
@@ -327,6 +334,7 @@ public class MusicPlayerService extends Service{
 
 		if(sec < 10){
 			mediaPlayer.reset();
+			beforeChangeNumber = -1;
 			trackNumber--;
 			if(trackNumber < 0){
 				if(playList != null)
@@ -357,6 +365,7 @@ public class MusicPlayerService extends Service{
 	//次の楽曲へ
 	public void nextMusic(){
 		mediaPlayer.reset();
+		beforeChangeNumber = -1;
 		trackNumber++;
 		if(playList != null)
 			if(trackNumber == playList.size())
@@ -394,6 +403,8 @@ public class MusicPlayerService extends Service{
 		shuffleFlag = flag;
 
 		if(shuffleFlag){
+			beforeChangeNumber = trackNumber;
+
 			boolean[] countFlag = new boolean[playList.size()];
 			shuffleList = new int[playList.size()];
 			int count = 0;
@@ -411,8 +422,16 @@ public class MusicPlayerService extends Service{
 					break;
 			}
 		}else {
-			trackNumber = shuffleList[trackNumber];
+			if(beforeChangeNumber != -1)
+				trackNumber = beforeChangeNumber;
+			else
+				trackNumber = shuffleList[trackNumber];
 		}
+	}
+
+	//シャッフルの設定取得
+	public boolean isShuffle(){
+		return shuffleFlag;
 	}
 
 	//楽曲のループ設定
