@@ -566,6 +566,8 @@ public class SheetActivity extends Activity implements OnClickListener,
 				            sql.upDateEntry(db, "sheetData", "dataType = ?",
 				            		new String[]{"musicSequence"}, addData);
 
+				            if(selectedNumber >= musicPlayList.size())
+				            	selectedNumber = 0;
 				            readData();
 
 				            deleteFlag = false;
