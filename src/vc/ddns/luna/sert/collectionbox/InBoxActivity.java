@@ -103,12 +103,14 @@ public class InBoxActivity extends Activity implements OnClickListener,
 
 	//メニューの作成
 	private final static int MENU_ITEM0 = 0;
+	private final static int MENU_ITEM1 = 1;
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
 
-		MenuItem item0 = menu.add(0, MENU_ITEM0, 0, "シート削除");
+		MenuItem item0 = menu.add(0, MENU_ITEM0, 0, "シート編集");
+		MenuItem item1 = menu.add(0, MENU_ITEM1, 0, "シート削除");
 
 		return true;
 	}
@@ -118,6 +120,72 @@ public class InBoxActivity extends Activity implements OnClickListener,
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case MENU_ITEM0:
+			//LayoutをViewとして読み込む
+			View layoutView = inflater.inflate(R.layout.create_sheet_dialog, null);
+
+			//dialogのViewを取得
+			final EditText titleView = (EditText)layoutView.findViewById(R.id.create_sheet_title);
+			final EditText commentView = (EditText)layoutView.findViewById(R.id.create_sheet_comment);
+			pathView = (TextView)layoutView.findViewById(R.id.create_sheet_showPath);
+
+			titleView.setText(((TextView)shLayView[viewSheetNumber - 1].findViewById(
+					R.id.inBox_sheetName)).getText().toString());
+			titleView.setTag(titleView.getText());
+
+			commentView.setText(((TextView)shLayView[viewSheetNumber - 1].findViewById(
+					R.id.inBox_sheetComment)).getText().toString());
+
+			//dialogのボタンにイベントリスナーを適応
+			((Button)layoutView.findViewById(R.id.create_sheet_button))
+					.setOnClickListener(
+							new View.OnClickListener() {
+								@Override
+								public void onClick(View v) {
+									Intent intent = new Intent();
+									intent.setType("image/*");
+									intent.setAction(Intent.ACTION_GET_CONTENT);
+									startActivityForResult(intent, REQUEST_GALLERY);
+								}
+							});
+
+			createDialog("Change Sheet Data", layoutView, "change", "cancel",
+					new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							//Positiveボタンが押された場合
+							if (which == DialogInterface.BUTTON_POSITIVE) {
+
+								//EditTextの文字列取得
+								String title = titleView.getText().toString();
+								String comment = commentView.getText().toString();
+								String bgPath = pathView.getText().toString();
+								if(comment.equals(""))
+									comment = "  ";
+								if(bgPath.equals(""))
+									bgPath = "  ";
+								else
+									bgPath = reSizeImage(bgPath);
+
+								if(!title.equals("")){
+									//同じタイトルがない場合
+									if(sql.searchDataBySheetNameAndType(db, title, null).length == 0 ||
+											title.equals(titleView.getTag().toString())){
+										sql.upDateEntry(db, "boxSheet", "sheetName = ?",
+												new String[]{titleView.getTag().toString()},
+												new String[]{boxName, title, comment, bgPath});
+
+										init();
+										readSheet();
+
+									}else
+										toast(InBoxActivity.this, "すでに同じ名前が登録されています");
+								}
+							}
+					}
+			});
+			break;
+
+		case MENU_ITEM1:
 			if(viewSheetNumber == 0)
 				break;
 
