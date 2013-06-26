@@ -36,6 +36,7 @@ import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -69,6 +70,9 @@ public class InBoxActivity extends Activity implements OnClickListener,
 
 	private LayoutInflater	inflater;//LayoutをViewとして取得する
 
+	private View[]			shLayView;//シート一覧配列
+	private int				viewSheetNumber;//表示しているViewが何番目か
+
 	//各種アニメーションオブジェクト
 	private Animation 		inFromRightAnimation;
 	private Animation 		inFromLeftAnimation;
@@ -97,14 +101,63 @@ public class InBoxActivity extends Activity implements OnClickListener,
 		setAnimations();
 	}
 
+	//メニューの作成
+	private final static int MENU_ITEM0 = 0;
+
 	@Override
-	public boolean onCreateOptionsMenu(Menu menu){
-		getMenuInflater().inflate(R.menu.main, menu);
+	public boolean onCreateOptionsMenu(Menu menu) {
+		super.onCreateOptionsMenu(menu);
+
+		MenuItem item0 = menu.add(0, MENU_ITEM0, 0, "シート削除");
+
+		return true;
+	}
+
+	//メニューのイベント処理
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case MENU_ITEM0:
+			if(viewSheetNumber == 0)
+				break;
+
+			final TextView txView = new TextView(this);
+			txView.setText(((TextView)shLayView[viewSheetNumber - 1].findViewById(
+					R.id.inBox_sheetName)).getText().toString());
+			txView.setTextSize(26);
+			createDialog("このシートを削除しますか？", txView, "Delete", "cancel",
+					new DialogInterface.OnClickListener() {
+
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							if(which == DialogInterface.BUTTON_POSITIVE){
+								String name = txView.getText().toString();
+
+								//データベースから削除する
+								//シートを削除するので個々のデータも削除する
+								sql.deleteEntry(db, "boxSheet", "sheetName = ?", new String[]{name});
+								sql.deleteEntry(db, "sheetData", "sheetName = ?", new String[]{name});
+
+								init();
+								readSheet();
+							}
+						}
+					});
+			break;
+
+		default: break;
+
+		}
+
 		return true;
 	}
 
 	//初期化処理
 	private void init(){
+		RelativeLayout rela = (RelativeLayout)viewFlipper.findViewById(R.id.inBox_main_rela);
+		viewFlipper.removeAllViews();
+		viewFlipper.addView(rela);
+		viewSheetNumber = 0;
 
 		//レイアウトから読み込む
 		TextView	boxNameView	= (TextView)findViewById(R.id.inBox_boxName);
@@ -142,7 +195,7 @@ public class InBoxActivity extends Activity implements OnClickListener,
 			if(data.length == 0)
 				return;
 
-			View[] shLayView = new View[data.length];
+			shLayView = new View[data.length];
 			sheetNum = data.length;
 
 			for(int i=0; i<shLayView.length; i++){
@@ -267,6 +320,7 @@ public class InBoxActivity extends Activity implements OnClickListener,
 	public void addDataToDB(String sheetTitle, String sheetCom, String bgImPath){
 		String[] data = new String[]{boxName, sheetTitle, sheetCom, bgImPath};
 		sql.createNewData(db, "boxSheet", data);
+		init();
 		readSheet();
 	}
 
@@ -361,11 +415,22 @@ public class InBoxActivity extends Activity implements OnClickListener,
 				viewFlipper.setOutAnimation(outToRightAnimation);
 				viewFlipper.showPrevious();
 
+				viewSheetNumber--;
+				if(viewSheetNumber < 0){
+					viewSheetNumber = viewFlipper.getChildCount() - 1;
+				}
+
 			}else{
 				viewFlipper.setInAnimation(inFromRightAnimation);
 				viewFlipper.setOutAnimation(outToLeftAnimation);
 				viewFlipper.showNext();
+
+				viewSheetNumber++;
+				if(viewSheetNumber >= viewFlipper.getChildCount()){
+					viewSheetNumber = 0;
+				}
 			}
+
 			return true;
 		}
 
