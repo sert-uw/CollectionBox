@@ -1,32 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/LinearLayout1"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:background="@color/Black"
     android:orientation="horizontal" >
 
     <ImageView
         android:id="@+id/sheet_picture_item_imaeg1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
         android:layout_weight="1.0"
-        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
+        android:cropToPadding="false"
+        android:scaleType="centerCrop"
         android:src="@drawable/dummy" />
 
     <ImageView
         android:id="@+id/sheet_picture_item_imaeg2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
         android:layout_weight="1.0"
-        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
+        android:scaleType="centerCrop"
         android:src="@drawable/dummy" />
 
     <ImageView
         android:id="@+id/sheet_picture_item_imaeg3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
         android:layout_weight="1.0"
-        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
+        android:scaleType="centerCrop"
         android:src="@drawable/dummy" />
 
 </LinearLayout>

@@ -15,12 +15,11 @@
         android:src="@drawable/koukoku" />
 
     <ScrollView
-        android:id="@+id/scrollView1"
+        android:id="@+id/sheet_picture_scroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_below="@+id/sheet_picture_item_imaeg1"
-        android:layout_centerHorizontal="true" >
+        android:layout_above="@+id/LinearLayout1"
+        android:layout_below="@+id/sheet_picture_item_imaeg1" >
 
         <LinearLayout
             android:id="@+id/sheet_picture_scrollLinear"
@@ -30,5 +29,69 @@
 
         </LinearLayout>
     </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/LinearLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:gravity="center"
+        android:orientation="vertical" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal" >
+
+            <Button
+                android:id="@+id/sheet_music_changeButton"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_weight="1.0"
+                android:tag="change"
+                android:text="⇔"
+                android:textSize="26sp" />
+
+            <ImageButton
+                android:id="@+id/sheet_music_rewinding_button"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_marginLeft="@dimen/activity_horizontal_margin"
+                android:layout_weight="1.0"
+                android:background="@drawable/dummy"
+                android:scaleType="fitCenter"
+                android:src="@drawable/button3"
+                android:tag="rewinding" />
+
+            <ImageButton
+                android:id="@+id/sheet_music_playBack_button"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_marginLeft="@dimen/activity_horizontal_margin"
+                android:layout_weight="1.0"
+                android:background="@drawable/dummy"
+                android:scaleType="fitCenter"
+                android:src="@drawable/button1"
+                android:tag="playBack" />
+
+            <ImageButton
+                android:id="@+id/sheet_music_fastForwarding_button"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_marginLeft="@dimen/activity_horizontal_margin"
+                android:layout_weight="1.0"
+                android:background="@drawable/dummy"
+                android:scaleType="fitCenter"
+                android:src="@drawable/button2"
+                android:tag="fastForwarding" />
+        </LinearLayout>
+    </LinearLayout>
 
 </RelativeLayout>

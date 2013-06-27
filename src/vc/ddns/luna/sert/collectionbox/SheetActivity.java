@@ -20,12 +20,10 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.MediaStore;
-import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.Animation;
@@ -40,20 +38,22 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
 
-public class SheetActivity extends Activity implements OnClickListener,
-		GestureDetector.OnGestureListener{
+public class SheetActivity extends Activity implements OnClickListener{
 
 	private static final int REQUEST_MUSIC = 0;//他アプリからの返り値取得用
+	private static final int REQUEST_GALLERY = 1;
 
-	private GestureDetector	gestureDetector; //GestureDetectorオブジェクト
 	private ViewFlipper 	viewFlipper;//アニメーション用Viewオブジェクト
 	private LayoutInflater	inflater;//LayoutをViewとして取得する
+
+	private boolean			changeFlag;//falseならmusic trueならpicture
 
 	private View			pictureView;//sheet_picture_layoutのView
 	private View			musicView;//sheet_music_layoutのView
 	private View			searchView;//検索結果レイアウト
 
 	private SeekBar			seekBar;//レイアウトのシークバー
+	private SeekBar			picSeekBar;
 
 	private String			boxName;//ボックス名
 	private String			sheetName;//シート名
@@ -86,7 +86,6 @@ public class SheetActivity extends Activity implements OnClickListener,
 		setContentView(R.layout.sheet_main_layout);
 		viewFlipper = (ViewFlipper)findViewById(R.id.sheet_viewFlipper);
 
-		gestureDetector = new GestureDetector(this, this);
 		inflater = LayoutInflater.from(this);
 
 		//InBoxActivityからデータを引き継ぐ
@@ -149,12 +148,18 @@ public class SheetActivity extends Activity implements OnClickListener,
 		viewFlipper.addView(musicView);
 		viewFlipper.addView(pictureView);
 
+		((Button)musicView.findViewById(R.id.sheet_music_changeButton)).setOnClickListener(this);
 		((ImageButton)musicView.findViewById(R.id.sheet_music_playBack_button)).setOnClickListener(this);
 		((ImageButton)musicView.findViewById(R.id.sheet_music_rewinding_button)).setOnClickListener(this);
 		((ImageButton)musicView.findViewById(R.id.sheet_music_fastForwarding_button)).setOnClickListener(this);
 		((ImageButton)musicView.findViewById(R.id.sheet_music_shuffle_button)).setOnClickListener(this);
 		((ImageButton)musicView.findViewById(R.id.sheet_music_repeat_button)).setOnClickListener(this);
 		seekBar = (SeekBar)musicView.findViewById(R.id.sheet_music_seekBar);
+
+		((Button)pictureView.findViewById(R.id.sheet_music_changeButton)).setOnClickListener(this);
+		((ImageButton)pictureView.findViewById(R.id.sheet_music_playBack_button)).setOnClickListener(this);
+		((ImageButton)pictureView.findViewById(R.id.sheet_music_rewinding_button)).setOnClickListener(this);
+		((ImageButton)pictureView.findViewById(R.id.sheet_music_fastForwarding_button)).setOnClickListener(this);
 	}
 
 	//フリックによるアニメーションをセットする
@@ -177,23 +182,32 @@ public class SheetActivity extends Activity implements OnClickListener,
 		pictureData = sql.searchDataBySheetNameAndType(db, sheetName, "picture");
 
 		LinearLayout scrollLinear = (LinearLayout)pictureView.findViewById(R.id.sheet_picture_scrollLinear);
+		scrollLinear.removeAllViews();
 
-		for(int i=0; i<pictureData.length/3.0; i++){
+		Uri[] picUri = new Uri[pictureData.length];
+
+		for(int i=0; i<pictureData.length; i++){
+			StringTokenizer st = new StringTokenizer(pictureData[i], ",");
+			st.nextToken(); st.nextToken();
+			picUri[i] = Uri.parse(st.nextToken());
+		}
+
+		for(int i=0; i<picUri.length/3.0; i++){
 			View itemView = inflater.inflate(R.layout.sheet_picture_item, null);
 			ImageView imageView1 = (ImageView)itemView.findViewById(R.id.sheet_picture_item_imaeg1);
 			ImageView imageView2 = (ImageView)itemView.findViewById(R.id.sheet_picture_item_imaeg2);
 			ImageView imageView3 = (ImageView)itemView.findViewById(R.id.sheet_picture_item_imaeg3);
 
-			if(i * 3 < pictureData.length){
-				imageView1.setImageURI(Uri.parse(pictureData[i * 3]));
+			if(i * 3 < picUri.length){
+				imageView1.setImageURI(picUri[i * 3]);
 				imageView1.setTag(i * 3);
 			}
-			if(i * 3 + 1 < pictureData.length){
-				imageView2.setImageURI(Uri.parse(pictureData[i * 3 + 1]));
+			if(i * 3 + 1 < picUri.length){
+				imageView2.setImageURI(picUri[i * 3 + 1]);
 				imageView2.setTag(i * 3 + 1);
 			}
-			if(i * 3 + 2 < pictureData.length){
-				imageView3.setImageURI(Uri.parse(pictureData[i * 3 + 2]));
+			if(i * 3 + 2 < picUri.length){
+				imageView3.setImageURI(picUri[i * 3 + 2]);
 				imageView3.setTag(i * 3 + 2);
 			}
 
@@ -350,13 +364,34 @@ public class SheetActivity extends Activity implements OnClickListener,
 	//メニューの作成
 	private final static int MENU_ITEM0 = 0;
 	private final static int MENU_ITEM1 = 1;
+	private final static int MENU_ITEM2 = 2;
+	private final static int MENU_ITEM3 = 3;
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
+			menu.add(0, MENU_ITEM0, 0, "画像追加");
+			menu.add(0, MENU_ITEM1, 1, "画像削除/削除解除");
+			menu.add(0, MENU_ITEM2, 0, "楽曲追加");
+			menu.add(0, MENU_ITEM3, 1, "楽曲削除/削除解除");
 
-		MenuItem item0 = menu.add(0, MENU_ITEM0, 0, "楽曲追加");
-		MenuItem item1 = menu.add(0, MENU_ITEM1, 1, "楽曲削除/削除解除");
+		return true;
+	}
+
+	//表示するメニューを決定する
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu){
+		if(changeFlag){
+			menu.findItem(MENU_ITEM0).setVisible(true);
+			menu.findItem(MENU_ITEM1).setVisible(true);
+			menu.findItem(MENU_ITEM2).setVisible(false);
+			menu.findItem(MENU_ITEM3).setVisible(false);
+		}else {
+			menu.findItem(MENU_ITEM0).setVisible(false);
+			menu.findItem(MENU_ITEM1).setVisible(false);
+			menu.findItem(MENU_ITEM2).setVisible(true);
+			menu.findItem(MENU_ITEM3).setVisible(true);
+		}
 
 		return true;
 	}
@@ -365,7 +400,15 @@ public class SheetActivity extends Activity implements OnClickListener,
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
+
 		case MENU_ITEM0:
+			Intent intent = new Intent();
+			intent.setType("image/*");
+			intent.setAction(Intent.ACTION_GET_CONTENT);
+			startActivityForResult(intent, REQUEST_GALLERY);
+			break;
+
+		case MENU_ITEM2:
 			final View searchView = inflater.inflate(R.layout.search_dialog, null);
 			createDialog("楽曲検索", searchView, "検索", "一覧から探す", "閉じる",
 					new DialogInterface.OnClickListener() {
@@ -422,7 +465,7 @@ public class SheetActivity extends Activity implements OnClickListener,
 					});
 			break;
 
-		case MENU_ITEM1:
+		case MENU_ITEM3:
 			deleteFlag = !deleteFlag;
 
 			changeDelModView();
@@ -467,6 +510,12 @@ public class SheetActivity extends Activity implements OnClickListener,
 	            		new String[]{"musicSequence"}, addData);
 
 	            readMusicData();
+
+			}else if(requestCode == REQUEST_GALLERY){
+				String[] addData = new String[]{sheetName, "picture", data.getDataString()};
+	            sql.createNewData(db, "sheetData", addData);
+
+	            readPictureData();
 			}
 		}
 	}
@@ -644,8 +693,22 @@ public class SheetActivity extends Activity implements OnClickListener,
 	public void onClick(View v) {
 		String tag = v.getTag().toString();
 
+		if(tag.equals("change")){
+			if(changeFlag){
+				viewFlipper.setInAnimation(inFromLeftAnimation);
+				viewFlipper.setOutAnimation(outToRightAnimation);
+				viewFlipper.showPrevious();
+			}else {
+				viewFlipper.setInAnimation(inFromRightAnimation);
+				viewFlipper.setOutAnimation(outToLeftAnimation);
+				viewFlipper.showNext();
+			}
+
+			changeFlag = !changeFlag;
+		}
+
 		//再生ボタン処理
-		if(tag.equals("playBack")){
+		else if(tag.equals("playBack")){
 			if(mpService != null && musicList.size() != 0){
 				setPlayList();
 				if(!mpService.isSetMusic())
@@ -836,66 +899,6 @@ public class SheetActivity extends Activity implements OnClickListener,
 			mpService.setSeekBar(seekBar);
 		mpService.startMusic();
 		switchCenterButton("pause");
-	}
-
-
-
-	@Override
-	public boolean onTouchEvent(MotionEvent e){
-		//GestureDetectorでジェスチャー処理を行う
-		gestureDetector.onTouchEvent(e);
-		return false;
-	}
-
-	@Override
-	public boolean onDown(MotionEvent e) {
-		return false;
-	}
-
-	@Override
-	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-
-		//絶対値の取得
-		float dx = Math.abs(velocityX);
-		float dy = Math.abs(velocityY);
-
-		//指の移動方向及び距離の判定
-		if(dx > dy && dx > 300){
-			//指の左右方向の判定
-			if(e1.getX() < e2.getX()){
-				viewFlipper.setInAnimation(inFromLeftAnimation);
-				viewFlipper.setOutAnimation(outToRightAnimation);
-				viewFlipper.showPrevious();
-
-			}else{
-				viewFlipper.setInAnimation(inFromRightAnimation);
-				viewFlipper.setOutAnimation(outToLeftAnimation);
-				viewFlipper.showNext();
-			}
-			return true;
-		}
-
-		return false;
-	}
-
-	@Override
-	public void onLongPress(MotionEvent e) {
-
-	}
-
-	@Override
-	public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-		return false;
-	}
-
-	@Override
-	public void onShowPress(MotionEvent e) {
-
-	}
-
-	@Override
-	public boolean onSingleTapUp(MotionEvent e) {
-		return false;
 	}
 
 	/////////////////////////////////////////////////////////

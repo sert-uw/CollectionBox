@@ -40,15 +40,31 @@
         android:gravity="center"
         android:orientation="vertical" >
 
-        <SeekBar
-            android:id="@+id/sheet_music_seekBar"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/activity_vertical_margin"
-            android:layout_marginLeft="@dimen/activity_horizontal_margin"
-            android:layout_marginRight="@dimen/activity_horizontal_margin"
-            android:paddingTop="@dimen/activity_vertical_margin"
-            android:progressDrawable="@drawable/seekbar" />
+            android:layout_height="wrap_content" >
+
+            <SeekBar
+                android:id="@+id/sheet_music_seekBar"
+                android:layout_width="232dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/activity_vertical_margin"
+                android:layout_marginLeft="@dimen/activity_horizontal_margin"
+                android:layout_marginRight="@dimen/activity_horizontal_margin"
+                android:layout_weight="0.44"
+                android:paddingTop="@dimen/activity_vertical_margin"
+                android:progressDrawable="@drawable/seekbar" />
+
+            <Button
+                android:id="@+id/sheet_music_changeButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:tag="change"
+                android:text="⇔"
+                android:textSize="26sp" />
+
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
