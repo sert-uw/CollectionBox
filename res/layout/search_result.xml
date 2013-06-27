@@ -5,7 +5,7 @@
     android:background="@color/Black" >
 
     <ImageView
-        android:id="@+id/imageView1"
+        android:id="@+id/sheet_picture_item_imaeg1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
@@ -45,7 +45,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/LinearLayout1"
-        android:layout_below="@+id/imageView1"
+        android:layout_below="@+id/sheet_picture_item_imaeg1"
         android:layout_centerHorizontal="true" >
 
         <LinearLayout

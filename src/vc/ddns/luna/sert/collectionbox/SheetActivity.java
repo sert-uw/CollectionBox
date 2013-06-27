@@ -33,6 +33,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -48,6 +49,7 @@ public class SheetActivity extends Activity implements OnClickListener,
 	private ViewFlipper 	viewFlipper;//アニメーション用Viewオブジェクト
 	private LayoutInflater	inflater;//LayoutをViewとして取得する
 
+	private View			pictureView;//sheet_picture_layoutのView
 	private View			musicView;//sheet_music_layoutのView
 	private View			searchView;//検索結果レイアウト
 
@@ -105,7 +107,8 @@ public class SheetActivity extends Activity implements OnClickListener,
 		setLayout();
 		doBindService(intent);
 		setAnimations();
-		readData();
+		readMusicData();
+		readPictureData();
 	}
 
 	//バックキーが押されたときの処理
@@ -138,6 +141,22 @@ public class SheetActivity extends Activity implements OnClickListener,
     	}
     }
 
+	//Layoutのセットを行う
+	private void setLayout(){
+		musicView = inflater.inflate(R.layout.sheet_music_layout, null);
+		pictureView = inflater.inflate(R.layout.sheet_picture_layout, null);
+
+		viewFlipper.addView(musicView);
+		viewFlipper.addView(pictureView);
+
+		((ImageButton)musicView.findViewById(R.id.sheet_music_playBack_button)).setOnClickListener(this);
+		((ImageButton)musicView.findViewById(R.id.sheet_music_rewinding_button)).setOnClickListener(this);
+		((ImageButton)musicView.findViewById(R.id.sheet_music_fastForwarding_button)).setOnClickListener(this);
+		((ImageButton)musicView.findViewById(R.id.sheet_music_shuffle_button)).setOnClickListener(this);
+		((ImageButton)musicView.findViewById(R.id.sheet_music_repeat_button)).setOnClickListener(this);
+		seekBar = (SeekBar)musicView.findViewById(R.id.sheet_music_seekBar);
+	}
+
 	//フリックによるアニメーションをセットする
 	private void setAnimations(){
 		inFromRightAnimation =
@@ -153,11 +172,39 @@ public class SheetActivity extends Activity implements OnClickListener,
 	//タグ用変数
 	private int count = 0;
 
-	//データベースから読み込む
-	private void readData(){
+	//データベースから画像を読み込む
+	private void readPictureData(){
+		pictureData = sql.searchDataBySheetNameAndType(db, sheetName, "picture");
+
+		LinearLayout scrollLinear = (LinearLayout)pictureView.findViewById(R.id.sheet_picture_scrollLinear);
+
+		for(int i=0; i<pictureData.length/3.0; i++){
+			View itemView = inflater.inflate(R.layout.sheet_picture_item, null);
+			ImageView imageView1 = (ImageView)itemView.findViewById(R.id.sheet_picture_item_imaeg1);
+			ImageView imageView2 = (ImageView)itemView.findViewById(R.id.sheet_picture_item_imaeg2);
+			ImageView imageView3 = (ImageView)itemView.findViewById(R.id.sheet_picture_item_imaeg3);
+
+			if(i * 3 < pictureData.length){
+				imageView1.setImageURI(Uri.parse(pictureData[i * 3]));
+				imageView1.setTag(i * 3);
+			}
+			if(i * 3 + 1 < pictureData.length){
+				imageView2.setImageURI(Uri.parse(pictureData[i * 3 + 1]));
+				imageView2.setTag(i * 3 + 1);
+			}
+			if(i * 3 + 2 < pictureData.length){
+				imageView3.setImageURI(Uri.parse(pictureData[i * 3 + 2]));
+				imageView3.setTag(i * 3 + 2);
+			}
+
+			scrollLinear.addView(itemView);
+		}
+	}
+
+	//データベースから音楽を読み込む
+	private void readMusicData(){
 
 		musicData = sql.searchDataBySheetNameAndType(db, sheetName, "music");
-		pictureData = sql.searchDataBySheetNameAndType(db, sheetName, "picture");
 		String[] readData = sql.searchDataBySheetNameAndType(db, sheetName, "musicSequence");
 
 		try{
@@ -215,20 +262,6 @@ public class SheetActivity extends Activity implements OnClickListener,
 		setLinearBg(true);
 
 		setPlayList();
-	}
-
-	//Layoutのセットを行う
-	private void setLayout(){
-		musicView = inflater.inflate(R.layout.sheet_music_layout, null);
-		viewFlipper.addView(musicView);
-
-		((ImageButton)musicView.findViewById(R.id.sheet_music_playBack_button)).setOnClickListener(this);
-		((ImageButton)musicView.findViewById(R.id.sheet_music_rewinding_button)).setOnClickListener(this);
-		((ImageButton)musicView.findViewById(R.id.sheet_music_fastForwarding_button)).setOnClickListener(this);
-		((ImageButton)musicView.findViewById(R.id.sheet_music_shuffle_button)).setOnClickListener(this);
-		((ImageButton)musicView.findViewById(R.id.sheet_music_repeat_button)).setOnClickListener(this);
-
-		seekBar = (SeekBar)musicView.findViewById(R.id.sheet_music_seekBar);
 	}
 
 	//音楽情報を読み込み、scrollViewに追加する
@@ -433,7 +466,7 @@ public class SheetActivity extends Activity implements OnClickListener,
 	            sql.upDateEntry(db, "sheetData", "dataType = ?",
 	            		new String[]{"musicSequence"}, addData);
 
-	            readData();
+	            readMusicData();
 			}
 		}
 	}
@@ -502,11 +535,11 @@ public class SheetActivity extends Activity implements OnClickListener,
 		            		new String[]{"musicSequence"}, addData);
 
 		            SheetActivity.this.setContentView(viewFlipper);
-		            readData();
+		            readMusicData();
 
 				}else if(tag.equals("cancel")){
 					SheetActivity.this.setContentView(viewFlipper);
-		            readData();
+		            readMusicData();
 
 				}else {
 					int number = Integer.parseInt(tag.replaceAll("[^0-9]", ""));
@@ -683,12 +716,14 @@ public class SheetActivity extends Activity implements OnClickListener,
 				setLinearBg(true);
 				deleteMusic();
 
-			}else if(musicList.size() != 0){
-				setLinearBg(false);
-				selectedNumber = Integer.parseInt(tag.replaceAll("[^0-9]", ""));
-				setPlayList();
-				setMusic();
-				startMusic();
+			}else {
+				if(musicList.size() != 0){
+					setLinearBg(false);
+					selectedNumber = Integer.parseInt(tag.replaceAll("[^0-9]", ""));
+					setPlayList();
+					setMusic();
+					startMusic();
+				}
 			}
 		}
 	}
@@ -765,7 +800,7 @@ public class SheetActivity extends Activity implements OnClickListener,
 
 				            if(selectedNumber >= musicPlayList.size())
 				            	selectedNumber = 0;
-				            readData();
+				            readMusicData();
 
 				            deleteFlag = false;
 							changeDelModView();
@@ -802,6 +837,8 @@ public class SheetActivity extends Activity implements OnClickListener,
 		mpService.startMusic();
 		switchCenterButton("pause");
 	}
+
+
 
 	@Override
 	public boolean onTouchEvent(MotionEvent e){
