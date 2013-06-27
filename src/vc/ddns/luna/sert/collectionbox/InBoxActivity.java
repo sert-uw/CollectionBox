@@ -128,9 +128,10 @@ public class InBoxActivity extends Activity implements OnClickListener,
 			final EditText commentView = (EditText)layoutView.findViewById(R.id.create_sheet_comment);
 			pathView = (TextView)layoutView.findViewById(R.id.create_sheet_showPath);
 
-			titleView.setText(((TextView)shLayView[viewSheetNumber - 1].findViewById(
-					R.id.inBox_sheetName)).getText().toString());
-			titleView.setTag(titleView.getText());
+			String nowTitle = ((TextView)shLayView[viewSheetNumber - 1].findViewById(
+					R.id.inBox_sheetName)).getText().toString();
+			titleView.setText(nowTitle);
+			titleView.setTag(nowTitle);
 
 			commentView.setText(((TextView)shLayView[viewSheetNumber - 1].findViewById(
 					R.id.inBox_sheetComment)).getText().toString());
@@ -170,6 +171,7 @@ public class InBoxActivity extends Activity implements OnClickListener,
 									//同じタイトルがない場合
 									if(sql.searchDataBySheetNameAndType(db, title, null).length == 0 ||
 											title.equals(titleView.getTag().toString())){
+
 										sql.upDateEntry(db, "boxSheet", "sheetName = ?",
 												new String[]{titleView.getTag().toString()},
 												new String[]{boxName, title, comment, bgPath});
