@@ -155,17 +155,24 @@ public class SheetActivity extends Activity implements OnClickListener,
 
 	//データベースから読み込む
 	private void readData(){
+
 		musicData = sql.searchDataBySheetNameAndType(db, sheetName, "music");
 		pictureData = sql.searchDataBySheetNameAndType(db, sheetName, "picture");
 		String[] readData = sql.searchDataBySheetNameAndType(db, sheetName, "musicSequence");
-		if(readData.length == 0){
-			musicSequence = "  ";
-			String[] addData = new String[]{sheetName, "musicSequence", musicSequence};
-			sql.createNewData(db, "sheetData", addData);
-		}else{
-			StringTokenizer st = new StringTokenizer(readData[0], ",");
-			st.nextToken(); st.nextToken();
-			musicSequence = st.nextToken();
+
+		try{
+			if(readData.length == 0){
+				musicSequence = "  ";
+				String[] addData = new String[]{sheetName, "musicSequence", musicSequence};
+				sql.createNewData(db, "sheetData", addData);
+			}else{
+				StringTokenizer st = new StringTokenizer(readData[0], ",");
+				st.nextToken(); st.nextToken();
+				musicSequence = st.nextToken();
+			}
+		}catch (Exception e){
+			System.out.println(readData[0]);
+			e.printStackTrace();
 		}
 
 		((LinearLayout)musicView.findViewById(R.id.sheet_music_scroll_linear)).removeAllViews();
@@ -344,17 +351,21 @@ public class SheetActivity extends Activity implements OnClickListener,
 								int count = 0;
 
 								if(!title.equals("")){
-									searchStr += MediaStore.Audio.Media.DISPLAY_NAME + " = ?";
+									searchStr += MediaStore.Audio.Media.DISPLAY_NAME + " like '%' || ? || '%'";
 									value[count] = title;
 									count++;
 								}
 								if(!artist.equals("")){
-									searchStr += MediaStore.Audio.Media.ARTIST + " = ?";
+									if(count != 0)
+										searchStr += " and ";
+									searchStr += MediaStore.Audio.Media.ARTIST + " like '%' || ? || '%'";
 									value[count] = artist;
 									count++;
 								}
 								if(!album.equals("")){
-									searchStr += MediaStore.Audio.Media.ALBUM + " = ?";
+									if(count != 0)
+										searchStr += " and ";
+									searchStr += MediaStore.Audio.Media.ALBUM + " like '%' || ? || '%'";
 									value[count] = album;
 									count++;
 								}
@@ -363,7 +374,10 @@ public class SheetActivity extends Activity implements OnClickListener,
 								for(int i=0; i<count; i++)
 									searchValue[i] = value[i];
 
-								setSearchResult(searchStr, searchValue);
+								if(searchStr.equals(""))
+									setSearchResult(null, null);
+								else
+									setSearchResult(searchStr, searchValue);
 
 							}else if(paramInt == DialogInterface.BUTTON_NEUTRAL){
 								Intent intent = new Intent();
@@ -490,6 +504,10 @@ public class SheetActivity extends Activity implements OnClickListener,
 		            SheetActivity.this.setContentView(viewFlipper);
 		            readData();
 
+				}else if(tag.equals("cancel")){
+					SheetActivity.this.setContentView(viewFlipper);
+		            readData();
+
 				}else {
 					int number = Integer.parseInt(tag.replaceAll("[^0-9]", ""));
 					CheckBox checkBox = (CheckBox)v.findViewById(R.id.search_result_item_check);
@@ -499,6 +517,7 @@ public class SheetActivity extends Activity implements OnClickListener,
 		};
 
 		((Button)searchView.findViewById(R.id.search_result_addButton)).setOnClickListener(clickListener);
+		((Button)searchView.findViewById(R.id.search_result_cancelButton)).setOnClickListener(clickListener);
 
         while( cursor.moveToNext() ){
         	View itemView = inflater.inflate(R.layout.search_result_item_view, null);
@@ -736,6 +755,9 @@ public class SheetActivity extends Activity implements OnClickListener,
 
 				            	 c.close();
 				            }
+
+				            if(list.equals(""))
+				            	list = "  ";
 
 				            String[] addData = new String[]{sheetName, "musicSequence", list};
 				            sql.upDateEntry(db, "sheetData", "dataType = ?",
