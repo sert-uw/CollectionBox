@@ -241,7 +241,7 @@ public class MusicPlayerService extends Service{
 
 		seekLoopFlag = true;
 
-		/*new Thread(new Runnable() {
+		new Thread(new Runnable() {
 			@Override
 			public void run() {
 				while(seekLoopFlag){
@@ -261,7 +261,7 @@ public class MusicPlayerService extends Service{
 					}
 				}
 			}
-		}).start();*/
+		}).start();
 	}
 
 	//SeekBarの有無

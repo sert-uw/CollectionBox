@@ -34,6 +34,11 @@
             android:theme="@android:style/Theme.NoTitleBar">
         </activity>
 
+	    <activity
+            android:name=".PictureActivity"
+            android:theme="@android:style/Theme.NoTitleBar">
+        </activity>
+
 	    <service android:name="MusicPlayerService"/>
 
     </application>

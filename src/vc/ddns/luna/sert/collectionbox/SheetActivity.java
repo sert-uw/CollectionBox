@@ -60,6 +60,9 @@ public class SheetActivity extends Activity implements OnClickListener{
 
 	private String[]		musicData;//音楽データ
 	private String[]		pictureData;//画像データ
+
+	private List<Uri>		pictureList = new ArrayList<Uri>();//画像のUriを保持する
+
 	private String			musicSequence;//音楽の再生順番定義
 
 	private boolean			deleteFlag;//楽曲の削除モード
@@ -116,21 +119,29 @@ public class SheetActivity extends Activity implements OnClickListener{
 		if(e.getAction() == KeyEvent.ACTION_DOWN){
 			if(e.getKeyCode() == KeyEvent.KEYCODE_BACK){
 				doUnbindService();
-				changeActivity();
+				changeActivity(-1);
 			}
 		}
 		return super.dispatchKeyEvent(e);
 	}
 
     //Activity変更
-    public void changeActivity(){
+    public void changeActivity(int number){
     	//インテントの生成
-    	Intent intent = new Intent(this,
-    			vc.ddns.luna.sert.collectionbox.InBoxActivity.class);
+    	Intent intent;
+
+    	if(number == -1)
+    		intent = new Intent(this,
+    				vc.ddns.luna.sert.collectionbox.InBoxActivity.class);
+    	else
+    		intent = new Intent(this,
+    				vc.ddns.luna.sert.collectionbox.PictureActivity.class);
+
     	try{
     		//インテントへパラメータ追加
     		intent.putExtra("sheetName", sheetName);
     		intent.putExtra("boxName", boxName);
+    		intent.putExtra("select", number);
 
     		//Activityの呼び出し
     		this.startActivity(intent);
@@ -184,31 +195,68 @@ public class SheetActivity extends Activity implements OnClickListener{
 		LinearLayout scrollLinear = (LinearLayout)pictureView.findViewById(R.id.sheet_picture_scrollLinear);
 		scrollLinear.removeAllViews();
 
-		Uri[] picUri = new Uri[pictureData.length];
+		View.OnClickListener clickListener = new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				final int number = Integer.parseInt(v.getTag().toString());
+
+				if(deleteFlag){
+					LinearLayout linear = (LinearLayout)inflater.inflate(R.layout.sheet_picture_item, null);
+					ImageView imageView = (ImageView)linear.findViewById(R.id.sheet_picture_item_imaeg1);
+					linear.removeAllViews();
+
+					imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+					imageView.setImageURI(pictureList.get(number));
+
+					createDialog("画像削除", imageView, "Delete", null, "cancel",
+							new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog, int which) {
+									if(which == DialogInterface.BUTTON_POSITIVE){
+										sql.deleteEntry(db, "sheetData", "data = ?",
+												new String[]{pictureList.get(number).toString()});
+
+										deleteFlag = false;
+										readPictureData();
+									}
+								}
+							});
+
+				}else{
+					doUnbindService();
+					changeActivity(number);
+				}
+			}
+		};
+
+		pictureList.removeAll(pictureList);
 
 		for(int i=0; i<pictureData.length; i++){
 			StringTokenizer st = new StringTokenizer(pictureData[i], ",");
 			st.nextToken(); st.nextToken();
-			picUri[i] = Uri.parse(st.nextToken());
+			pictureList.add(Uri.parse(st.nextToken()));
 		}
 
-		for(int i=0; i<picUri.length/3.0; i++){
+		for(int i=0; i<pictureList.size()/3.0; i++){
 			View itemView = inflater.inflate(R.layout.sheet_picture_item, null);
 			ImageView imageView1 = (ImageView)itemView.findViewById(R.id.sheet_picture_item_imaeg1);
 			ImageView imageView2 = (ImageView)itemView.findViewById(R.id.sheet_picture_item_imaeg2);
 			ImageView imageView3 = (ImageView)itemView.findViewById(R.id.sheet_picture_item_imaeg3);
 
-			if(i * 3 < picUri.length){
-				imageView1.setImageURI(picUri[i * 3]);
+			if(i * 3 < pictureList.size()){
+				imageView1.setImageURI(pictureList.get(i * 3));
 				imageView1.setTag(i * 3);
+				imageView1.setOnClickListener(clickListener);
 			}
-			if(i * 3 + 1 < picUri.length){
-				imageView2.setImageURI(picUri[i * 3 + 1]);
+			if(i * 3 + 1 < pictureList.size()){
+				imageView2.setImageURI(pictureList.get(i * 3 + 1));
 				imageView2.setTag(i * 3 + 1);
+				imageView2.setOnClickListener(clickListener);
 			}
-			if(i * 3 + 2 < picUri.length){
-				imageView3.setImageURI(picUri[i * 3 + 2]);
+			if(i * 3 + 2 < pictureList.size()){
+				imageView3.setImageURI(pictureList.get(i * 3 + 2));
 				imageView3.setTag(i * 3 + 2);
+				imageView3.setOnClickListener(clickListener);
 			}
 
 			scrollLinear.addView(itemView);
@@ -406,6 +454,12 @@ public class SheetActivity extends Activity implements OnClickListener{
 			intent.setType("image/*");
 			intent.setAction(Intent.ACTION_GET_CONTENT);
 			startActivityForResult(intent, REQUEST_GALLERY);
+			break;
+
+		case MENU_ITEM1:
+			deleteFlag = !deleteFlag;
+
+			Toast.makeText(SheetActivity.this, "削除する画像を選択してください。", Toast.LENGTH_SHORT).show();
 			break;
 
 		case MENU_ITEM2:
@@ -704,6 +758,7 @@ public class SheetActivity extends Activity implements OnClickListener{
 				viewFlipper.showNext();
 			}
 
+			deleteFlag = false;
 			changeFlag = !changeFlag;
 		}
 
