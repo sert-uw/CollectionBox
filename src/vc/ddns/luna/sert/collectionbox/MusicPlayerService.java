@@ -36,7 +36,7 @@ public class MusicPlayerService extends Service{
 	private int[]		shuffleList;//シャッフルプレイリスト保持
 	private boolean		shuffleFlag;//シャッフルモードかどうか
 	private int			trackNumber;//再生しているトラックナンバー
-	private int			beforeChangeNumber;//シャッフルのON/OFFが行われた瞬間のトラックナンバー
+	private int			beforeChangeNumber = -1;//シャッフルのON/OFFが行われた瞬間のトラックナンバー
 	private Context		context;
 	private String		boxName = null;
 	private String		sheetName = null;
@@ -320,6 +320,11 @@ public class MusicPlayerService extends Service{
 			mediaPlayer.pause();
 			pauseFlag = true;
 		}
+	}
+
+	//一時停止状態かどうか取得
+	public boolean isPauseMusic(){
+		return pauseFlag;
 	}
 
 	//巻き戻し

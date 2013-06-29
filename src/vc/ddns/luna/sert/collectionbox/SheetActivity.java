@@ -125,6 +125,15 @@ public class SheetActivity extends Activity implements OnClickListener{
 		return super.dispatchKeyEvent(e);
 	}
 
+	@Override
+	public void onUserLeaveHint(){
+		//ホームボタンが押された時や、他のアプリが起動した時に呼ばれる
+		//戻るボタンが押された場合には呼ばれない
+
+		doUnbindService();
+		this.finish();
+	}
+
     //Activity変更
     public void changeActivity(int number){
     	//インテントの生成
@@ -1031,6 +1040,10 @@ public class SheetActivity extends Activity implements OnClickListener{
 
 	private void doUnbindService(){
 		if(mIsBound){
+			//楽曲を再生していなければサービスを停止する
+			if(mpService.isPauseMusic() || !mpService.isPlaying())
+				mpService.shutdown();
+
 			//コネクションの解除
 			unbindService(mConnection);
 			mIsBound = false;
