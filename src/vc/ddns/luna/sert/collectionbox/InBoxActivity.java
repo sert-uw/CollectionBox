@@ -43,8 +43,10 @@ import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -99,6 +101,7 @@ public class InBoxActivity extends Activity implements OnClickListener,
 		init();
 		readSheet();
 		setAnimations();
+		setHelp();
 	}
 
 	//メニューの作成
@@ -313,6 +316,61 @@ public class InBoxActivity extends Activity implements OnClickListener,
 				AnimationUtils.loadAnimation(this, R.anim.right_out);
 		outToLeftAnimation =
 				AnimationUtils.loadAnimation(this, R.anim.left_out);
+	}
+
+	//説明を表示する
+	private void setHelp(){
+		if(!readSetPara()){
+			LinearLayout linear = new LinearLayout(this);
+			linear.setOrientation(LinearLayout.VERTICAL);
+			TextView textView = new TextView(this);
+			final CheckBox checkBox = new CheckBox(this);
+			textView.setText(R.string.first_help_inbox_strings);
+			checkBox.setText("この説明を次回から表示しない。");
+
+			linear.addView(textView);
+			linear.addView(checkBox);
+
+			createDialog("操作説明", linear, "OK", null,
+					new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							setPara(checkBox.isChecked());
+						}
+					});
+		}
+	}
+
+	//アイコン加工の説明の表示設定の有無
+	private boolean readSetPara(){
+		boolean flag = false;
+		String[] data = sql.searchDataBySheetNameAndType(db, "help", "first_help_3");
+
+		if(data.length != 0){
+			StringTokenizer st = new StringTokenizer(data[0], ",");
+			st.nextToken(); st.nextToken();
+			String flagString = st.nextToken();
+			if(flagString.equals("true"))
+				flag = true;
+			else if(flagString.equals("false"))
+				flag = false;
+		}
+
+		return flag;
+	}
+
+	//アイコン加工説明の表示設定
+	private void setPara(boolean flag){
+		String[] data = sql.searchDataBySheetNameAndType(db, "help", "first_help_3");
+
+		if(data.length != 0){
+			sql.upDateEntry(db, "sheetData", "dataType = ?",
+					new String[]{"first_help_3"},
+					new String[]{"help", "first_help_3", (flag)? "true":"false"});
+		}else {
+			sql.createNewData(db, "sheetData",
+					new String[]{"help", "first_help_3", (flag)? "true":"false"});
+		}
 	}
 
 	@Override

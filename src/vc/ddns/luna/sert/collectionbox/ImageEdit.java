@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -30,7 +32,10 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 public class ImageEdit extends View implements OnClickListener{
 	private MainActivity	activity;		//MainActivityオブジェクト
@@ -83,6 +88,44 @@ public class ImageEdit extends View implements OnClickListener{
 
 		rela.addView(this);
 		top.addView(inner);
+
+		if(!activity.readSetPara()){
+			LinearLayout linear = new LinearLayout(activity);
+			linear.setOrientation(LinearLayout.VERTICAL);
+			TextView textView = new TextView(activity);
+			final CheckBox checkBox = new CheckBox(activity);
+			textView.setText(R.string.first_help_image_edit_strings);
+			checkBox.setText("この説明を次回から表示しない。");
+
+			linear.addView(textView);
+			linear.addView(checkBox);
+
+			createDialog("操作説明", linear, "OK", null,
+					new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							activity.setPara(checkBox.isChecked());
+						}
+					});
+		}
+	}
+
+	//ダイアログの表示
+	/*title:Dialogのタイトル        view:Dialogに埋め込むView
+	  ptext:Positiveボタンの文字列  ntext:Negativeボタンの文字列
+	  listener:ボタンのイベントリスナー
+	*/
+	private void createDialog(String title, View view,
+			String ptext, String ntext,
+			DialogInterface.OnClickListener listener) {
+		if(activity == null)
+			return;
+		AlertDialog.Builder ad = new AlertDialog.Builder(activity);
+		ad.setTitle(title);
+		ad.setView(view);
+		ad.setPositiveButton(ptext, listener);
+		ad.setNegativeButton(ntext, listener);
+		ad.show();
 	}
 
 	//このViewがフォーカスされてから画像を読み込む

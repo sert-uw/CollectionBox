@@ -4,5 +4,35 @@
     <string name="app_name">CollectionBox</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
+    <string name="first_help_main_strings">        この度はCollectionBoxをインストールいただきありがとうございます。\n
+このアプリはボックス、シート、データという三層で成り立っています。\n
+データがシートに含まれ、シートがボックスに含まれています。\n
+ボックスは大まかな分類で、シートはそのボックス内での細かな分類となります。\n\n
+音楽を例にして説明します。\n
+ボックスは大まかな分類なのでアーティストの名前で作成します。\n
+次にシートはボックス内での細かな分類となるので、アルバム名やライブ名で作成します。\n
+そしてシートに対応する音楽や画像を登録することでメディアを管理することができます。\n\n
 
+それではさっそくNewボタンを押してボックスを作成してみましょう！</string>
+
+    <string name="first_help_image_edit_strings">
+        ここではアイコンとして使用する画像のトリミングを行います。\n
+        トリミングする範囲が決まったら上のトリミングボタンを押してください。
+    </string>
+
+    <string name="first_help_inbox_strings">
+        シート管理画面です。\n
+        下のボタンで新しいシートを作成できます。\n
+        作成したシートは左右にフリックすることで表示変更できます。\n
+        メニューボタンからシートの編集と削除ができます。
+    </string>
+
+    <string name="first_help_sheet_strings">
+        データ画面です。\n
+        ここでは音楽と画像の２つのメディアを鑑賞できます。\n
+        右下の「⇔」ボタンで切りかえれます。\n
+        メニューボタンから音楽、画像の追加ができます。\n
+        音楽は一覧から探す場合は１曲ずつ、検索した場合はチェックした項目すべて追加できます。
+        画像は１つずつの追加になります。
+    </string>
 </resources>

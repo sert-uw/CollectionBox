@@ -15,6 +15,7 @@ import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -41,6 +42,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		setContentView(R.layout.activity_main);
 
 		init();
+		setHelp();
 	}
 
 	@Override
@@ -108,6 +110,79 @@ public class MainActivity extends Activity implements OnClickListener {
 			}
 		}catch(Exception e){
 			e.printStackTrace();
+		}
+	}
+
+	//設定が存在するかどうか
+	private boolean exist;
+
+	//操作説明を表示
+	private void setHelp(){
+		String[] data = sql.searchDataBySheetNameAndType(db, "help", "first_help_1");
+
+
+		if(data.length != 0){
+			exist = true;
+			StringTokenizer st = new StringTokenizer(data[0], ",");
+			st.nextToken(); st.nextToken();
+			if(st.nextToken().equals("true"))
+				return;
+		}
+
+		LayoutInflater inflater = LayoutInflater.from(this);
+		final FrameLayout frame = (FrameLayout)findViewById(R.id.main_frame);
+		final View helpView1 = inflater.inflate(R.layout.first_help_main_layout, null);
+		frame.addView(helpView1);
+
+		final CheckBox check = (CheckBox)helpView1.findViewById(R.id.first_help_main_checkBox);
+		((Button)helpView1.findViewById(R.id.fitst_help_main_button)).setOnClickListener(
+				new View.OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						frame.removeView(helpView1);
+						boolean flag = check.isChecked();
+
+						if(exist){
+							sql.upDateEntry(db, "sheetData", "dataType = ?",
+									new String[]{"first_help_1"},
+									new String[]{"help", "first_help_1", (flag)? "true":"false"});
+						}else{
+							sql.createNewData(db, "sheetData",
+									new String[]{"help", "first_help_1", (flag)? "true":"false"});
+						}
+					}
+				});
+	}
+
+	//アイコン加工の説明の表示設定の有無
+	public boolean readSetPara(){
+		boolean flag = false;
+		String[] data = sql.searchDataBySheetNameAndType(db, "help", "first_help_2");
+
+		if(data.length != 0){
+			StringTokenizer st = new StringTokenizer(data[0], ",");
+			st.nextToken(); st.nextToken();
+			String flagString = st.nextToken();
+			if(flagString.equals("true"))
+				flag = true;
+			else if(flagString.equals("false"))
+				flag = false;
+		}
+
+		return flag;
+	}
+
+	//アイコン加工説明の表示設定
+	public void setPara(boolean flag){
+		String[] data = sql.searchDataBySheetNameAndType(db, "help", "first_help_2");
+
+		if(data.length != 0){
+			sql.upDateEntry(db, "sheetData", "dataType = ?",
+					new String[]{"first_help_2"},
+					new String[]{"help", "first_help_2", (flag)? "true":"false"});
+		}else {
+			sql.createNewData(db, "sheetData",
+					new String[]{"help", "first_help_2", (flag)? "true":"false"});
 		}
 	}
 
