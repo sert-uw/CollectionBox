@@ -26,6 +26,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
@@ -43,6 +44,8 @@ public class SheetActivity extends Activity implements OnClickListener{
 	private static final int REQUEST_MUSIC = 0;//他アプリからの返り値取得用
 	private static final int REQUEST_GALLERY = 1;
 
+	private boolean			receiveResultFlag;//他アプリからの結果待ちフラグ
+
 	private ViewFlipper 	viewFlipper;//アニメーション用Viewオブジェクト
 	private LayoutInflater	inflater;//LayoutをViewとして取得する
 
@@ -53,7 +56,6 @@ public class SheetActivity extends Activity implements OnClickListener{
 	private View			searchView;//検索結果レイアウト
 
 	private SeekBar			seekBar;//レイアウトのシークバー
-	private SeekBar			picSeekBar;
 
 	private String			boxName;//ボックス名
 	private String			sheetName;//シート名
@@ -89,7 +91,7 @@ public class SheetActivity extends Activity implements OnClickListener{
 		setContentView(R.layout.sheet_main_layout);
 		viewFlipper = (ViewFlipper)findViewById(R.id.sheet_viewFlipper);
 
-		inflater = LayoutInflater.from(this);
+		inflater = LayoutInflater.from(getApplicationContext());
 
 		//InBoxActivityからデータを引き継ぐ
 		Bundle extras = getIntent().getExtras();
@@ -102,7 +104,7 @@ public class SheetActivity extends Activity implements OnClickListener{
 		sql = new MySQLite(this);
 		db = sql.getWritableDatabase();
 
-		Intent intent = new Intent(this, MusicPlayerService.class);
+		Intent intent = new Intent(getApplicationContext(), MusicPlayerService.class);
 		if(!isServiceRunning("vc.ddns.luna.sert.collectionbox.MusicPlayerService"))
 			doStartService(intent);
 
@@ -132,8 +134,19 @@ public class SheetActivity extends Activity implements OnClickListener{
 		//ホームボタンが押された時や、他のアプリが起動した時に呼ばれる
 		//戻るボタンが押された場合には呼ばれない
 
-		doUnbindService();
-		this.finish();
+		if(!receiveResultFlag){
+			doUnbindService();
+			this.finish();
+		}
+	}
+
+	@Override
+	public void onDestroy(){
+		super.onDestroy();
+		destroyObjects();
+
+		db.close();
+		sql.close();
 	}
 
     //Activity変更
@@ -142,10 +155,10 @@ public class SheetActivity extends Activity implements OnClickListener{
     	Intent intent;
 
     	if(number == -1)
-    		intent = new Intent(this,
+    		intent = new Intent(getApplicationContext(),
     				vc.ddns.luna.sert.collectionbox.InBoxActivity.class);
     	else
-    		intent = new Intent(this,
+    		intent = new Intent(getApplicationContext(),
     				vc.ddns.luna.sert.collectionbox.PictureActivity.class);
 
     	try{
@@ -184,6 +197,70 @@ public class SheetActivity extends Activity implements OnClickListener{
 		((ImageButton)pictureView.findViewById(R.id.sheet_music_fastForwarding_button)).setOnClickListener(this);
 	}
 
+	//オブジェクトの解放を行う
+	private void destroyObjects(){
+		/*cleanupView(musicView.findViewById(R.id.sheet_music_changeButton));
+		cleanupView(musicView.findViewById(R.id.sheet_music_playBack_button));
+		cleanupView(musicView.findViewById(R.id.sheet_music_rewinding_button));
+		cleanupView(musicView.findViewById(R.id.sheet_music_fastForwarding_button));
+		cleanupView(musicView.findViewById(R.id.sheet_music_shuffle_button));
+		cleanupView(musicView.findViewById(R.id.sheet_music_repeat_button));
+		cleanupView(seekBar);
+
+		cleanupView(pictureView.findViewById(R.id.sheet_music_changeButton));
+		cleanupView(pictureView.findViewById(R.id.sheet_music_playBack_button));
+		cleanupView(pictureView.findViewById(R.id.sheet_music_rewinding_button));
+		cleanupView(pictureView.findViewById(R.id.sheet_music_fastForwarding_button));*/
+
+		cleanupView(musicView);
+		cleanupView(pictureView);
+		cleanupView(searchView);
+
+		cleanupView(viewFlipper);
+
+		musicList.removeAll(musicList);
+		musicList = null;
+
+		musicPlayList.removeAll(musicPlayList);
+		musicPlayList = null;
+
+		pictureList.removeAll(pictureList);
+		pictureList = null;
+
+		musicData = null;
+		pictureData = null;
+	}
+
+	//View解放
+	 public static final void cleanupView(View view) {
+		 if(view == null)
+			 return;
+
+	      if(view instanceof ImageButton) {
+	          ImageButton ib = (ImageButton)view;
+	          ib.setImageDrawable(null);
+	      } else if(view instanceof ImageView) {
+	          ImageView iv = (ImageView)view;
+	          iv.setImageDrawable(null);
+	      } else if(view instanceof SeekBar) {
+	          SeekBar sb = (SeekBar)view;
+	          sb.setProgressDrawable(null);
+	          sb.setThumb(null);
+	      // } else if(view instanceof( xxxx )) {  -- 他にもDrawable を使用するUIコンポーネントがあれば追加
+	      }
+
+	      view.setBackgroundDrawable(null);
+	      if(view instanceof ViewGroup) {
+	          ViewGroup vg = (ViewGroup)view;
+	          int size = vg.getChildCount();
+	          for(int i = 0; i < size; i++) {
+	              cleanupView(vg.getChildAt(i));
+	          }
+	      }
+
+	      view.setOnClickListener(null);
+	  }
+
 	//フリックによるアニメーションをセットする
 	private void setAnimations(){
 		inFromRightAnimation =
@@ -199,10 +276,10 @@ public class SheetActivity extends Activity implements OnClickListener{
 	//説明を表示する
 		private void setHelp(){
 			if(!readSetPara()){
-				LinearLayout linear = new LinearLayout(this);
+				LinearLayout linear = new LinearLayout(getApplicationContext());
 				linear.setOrientation(LinearLayout.VERTICAL);
-				TextView textView = new TextView(this);
-				final CheckBox checkBox = new CheckBox(this);
+				TextView textView = new TextView(getApplicationContext());
+				final CheckBox checkBox = new CheckBox(getApplicationContext());
 				textView.setText(R.string.first_help_sheet_strings);
 				checkBox.setText("この説明を次回から表示しない。");
 
@@ -300,32 +377,38 @@ public class SheetActivity extends Activity implements OnClickListener{
 		for(int i=0; i<pictureData.length; i++){
 			StringTokenizer st = new StringTokenizer(pictureData[i], ",");
 			st.nextToken(); st.nextToken();
-			pictureList.add(Uri.parse(st.nextToken()));
+			Uri uri = Uri.parse(st.nextToken());
+			pictureList.add(uri);
 		}
 
-		for(int i=0; i<pictureList.size()/3.0; i++){
-			View itemView = inflater.inflate(R.layout.sheet_picture_item, null);
-			ImageView imageView1 = (ImageView)itemView.findViewById(R.id.sheet_picture_item_imaeg1);
-			ImageView imageView2 = (ImageView)itemView.findViewById(R.id.sheet_picture_item_imaeg2);
-			ImageView imageView3 = (ImageView)itemView.findViewById(R.id.sheet_picture_item_imaeg3);
+		try{
+			for(int i=0; i<pictureList.size()/3.0; i++){
+				View itemView = inflater.inflate(R.layout.sheet_picture_item, null);
+				ImageView imageView1 = (ImageView)itemView.findViewById(R.id.sheet_picture_item_imaeg1);
+				ImageView imageView2 = (ImageView)itemView.findViewById(R.id.sheet_picture_item_imaeg2);
+				ImageView imageView3 = (ImageView)itemView.findViewById(R.id.sheet_picture_item_imaeg3);
 
-			if(i * 3 < pictureList.size()){
-				imageView1.setImageURI(pictureList.get(i * 3));
-				imageView1.setTag(i * 3);
-				imageView1.setOnClickListener(clickListener);
-			}
-			if(i * 3 + 1 < pictureList.size()){
-				imageView2.setImageURI(pictureList.get(i * 3 + 1));
-				imageView2.setTag(i * 3 + 1);
-				imageView2.setOnClickListener(clickListener);
-			}
-			if(i * 3 + 2 < pictureList.size()){
-				imageView3.setImageURI(pictureList.get(i * 3 + 2));
-				imageView3.setTag(i * 3 + 2);
-				imageView3.setOnClickListener(clickListener);
-			}
+				if(i * 3 < pictureList.size()){
+					imageView1.setImageURI(pictureList.get(i * 3));
+					imageView1.setTag(i * 3);
+					imageView1.setOnClickListener(clickListener);
+				}
+				if(i * 3 + 1 < pictureList.size()){
+					imageView2.setImageURI(pictureList.get(i * 3 + 1));
+					imageView2.setTag(i * 3 + 1);
+					imageView2.setOnClickListener(clickListener);
+				}
+				if(i * 3 + 2 < pictureList.size()){
+					imageView3.setImageURI(pictureList.get(i * 3 + 2));
+					imageView3.setTag(i * 3 + 2);
+					imageView3.setOnClickListener(clickListener);
+				}
 
-			scrollLinear.addView(itemView);
+				scrollLinear.addView(itemView);
+			}
+		}catch (Exception e){
+			System.out.println(e);
+			e.printStackTrace();
 		}
 	}
 
@@ -411,12 +494,12 @@ public class SheetActivity extends Activity implements OnClickListener{
         );
 
         while( cursor.moveToNext() ){
-        	LinearLayout linear = new LinearLayout(SheetActivity.this);
+        	LinearLayout linear = new LinearLayout(SheetActivity.this.getApplicationContext());
         	linear.setOrientation(LinearLayout.VERTICAL);
 
-        	TextView titleView = new TextView(SheetActivity.this);
-        	TextView artistView = new TextView(SheetActivity.this);
-        	TextView albumView = new TextView(SheetActivity.this);
+        	TextView titleView = new TextView(SheetActivity.this.getApplicationContext());
+        	TextView artistView = new TextView(SheetActivity.this.getApplicationContext());
+        	TextView albumView = new TextView(SheetActivity.this.getApplicationContext());
 
         	titleView.setMaxLines(1);
         	artistView.setMaxLines(1);
@@ -516,6 +599,7 @@ public class SheetActivity extends Activity implements OnClickListener{
 		switch (item.getItemId()) {
 
 		case MENU_ITEM0:
+			receiveResultFlag = true;
 			Intent intent = new Intent();
 			intent.setType("image/*");
 			intent.setAction(Intent.ACTION_GET_CONTENT);
@@ -576,6 +660,7 @@ public class SheetActivity extends Activity implements OnClickListener{
 									setSearchResult(searchStr, searchValue);
 
 							}else if(paramInt == DialogInterface.BUTTON_NEUTRAL){
+								receiveResultFlag = true;
 								Intent intent = new Intent();
 								intent.setType("audio/*");
 								intent.setAction(Intent.ACTION_GET_CONTENT);
@@ -603,6 +688,8 @@ public class SheetActivity extends Activity implements OnClickListener{
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data){
 		if(resultCode == RESULT_OK){
+			receiveResultFlag = false;
+
 			if(requestCode == REQUEST_MUSIC){
 	            String[] addData = new String[]{sheetName, "music", data.getDataString()};
 	            sql.createNewData(db, "sheetData", addData);
@@ -1041,8 +1128,8 @@ public class SheetActivity extends Activity implements OnClickListener{
 			if(!mpService.setNames(boxName, sheetName)){
 				mpService.shutdown();
 				doUnbindService();
-				doStartService(new Intent(SheetActivity.this, MusicPlayerService.class));
-				doBindService(new Intent(SheetActivity.this, MusicPlayerService.class));
+				doStartService(new Intent(SheetActivity.this.getApplicationContext(), MusicPlayerService.class));
+				doBindService(new Intent(SheetActivity.this.getApplicationContext(), MusicPlayerService.class));
 				return;
 			}
 

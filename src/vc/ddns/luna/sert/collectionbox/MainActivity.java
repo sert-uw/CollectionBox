@@ -14,11 +14,14 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,6 +46,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		init();
 		setHelp();
+
 	}
 
 	@Override
@@ -112,6 +116,60 @@ public class MainActivity extends Activity implements OnClickListener {
 			e.printStackTrace();
 		}
 	}
+
+	@Override
+	public void onDestroy(){
+		super.onDestroy();
+		destroyObjects();
+
+		db.close();
+		sql.close();
+	}
+
+	//オブジェクトの削除
+	private void destroyObjects(){
+		for(int i=0; i<imView.length; i++){
+			cleanupView(imView[i]);
+		}
+
+		for(int i=0; i<textView.length; i++){
+			cleanupView(textView[i]);
+		}
+
+		cleanupView(delNotif);
+		cleanupView(pathView);
+		cleanupView(frame);
+	}
+
+	//View解放
+	 public static final void cleanupView(View view) {
+		 if(view == null)
+			 return;
+
+	      if(view instanceof ImageButton) {
+	          ImageButton ib = (ImageButton)view;
+	          ib.setImageDrawable(null);
+	      } else if(view instanceof ImageView) {
+	          ImageView iv = (ImageView)view;
+	          iv.setImageDrawable(null);
+	      } else if(view instanceof SeekBar) {
+	          SeekBar sb = (SeekBar)view;
+	          sb.setProgressDrawable(null);
+	          sb.setThumb(null);
+	      // } else if(view instanceof( xxxx )) {  -- 他にもDrawable を使用するUIコンポーネントがあれば追加
+	      }
+
+	      view.setBackgroundDrawable(null);
+	      if(view instanceof ViewGroup) {
+	          ViewGroup vg = (ViewGroup)view;
+	          int size = vg.getChildCount();
+	          for(int i = 0; i < size; i++) {
+	              cleanupView(vg.getChildAt(i));
+	          }
+	      }
+
+	      view.setOnClickListener(null);
+	  }
 
 	//設定が存在するかどうか
 	private boolean exist;
@@ -248,7 +306,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
 										//image_edit_layoutをViewで取得
 										if(!pathView.getText().toString().equals("")){
-											LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
+											LayoutInflater inflater = LayoutInflater.from(MainActivity.this.getApplicationContext());
 											View imEditView = inflater.inflate(R.layout.image_edit_layout, null);
 
 											//ImageEditオブジェクトを生成しRelativeLayoutへ追加
@@ -278,7 +336,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				if(deleteFlag) {
 
 					//Dialogに表示するTextViewの生成
-					TextView text = new TextView(this);
+					TextView text = new TextView(getApplicationContext());
 
 					//TextViewのパラメータ決定
 					text.setText(boxName + "を削除しますか？");
@@ -336,7 +394,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	private void createDialog(String title, View view,
 			String ptext, String ntext,
 			DialogInterface.OnClickListener listener) {
-		AlertDialog.Builder ad = new AlertDialog.Builder(this);
+		AlertDialog.Builder ad = new AlertDialog.Builder(getApplicationContext());
 		ad.setTitle(title);
 		ad.setView(view);
 		ad.setPositiveButton(ptext, listener);
@@ -366,7 +424,7 @@ public class MainActivity extends Activity implements OnClickListener {
     //Activity変更
     public void changeActivity(String boxName){
     	//インテントの生成
-    	Intent intent = new Intent(this,
+    	Intent intent = new Intent(getApplicationContext(),
     			vc.ddns.luna.sert.collectionbox.InBoxActivity.class);
     	try{
     		//インテントへパラメータ追加

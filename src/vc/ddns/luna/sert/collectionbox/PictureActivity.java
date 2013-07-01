@@ -14,9 +14,12 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.ViewFlipper;
 
 public class PictureActivity extends Activity implements GestureDetector.OnGestureListener{
@@ -24,6 +27,7 @@ public class PictureActivity extends Activity implements GestureDetector.OnGestu
 	private String	sheetName;//シート名
 	private String	boxName;//ボックス名
 	private int		selectedNumber;//選択された画像の番号
+	private int		location;//ViewFlipperの位置
 
 	private ViewFlipper 	viewFlipper;//アニメーション用Viewオブジェクト
 
@@ -34,6 +38,7 @@ public class PictureActivity extends Activity implements GestureDetector.OnGestu
 	private LayoutInflater	inflater;//LayoutをViewとして取得する
 
 	private List<Uri>		pictureList = new ArrayList<Uri>();
+	private ImageView[]		imageView = new ImageView[3];
 
 	//各種アニメーションオブジェクト
 		private Animation 	inFromRightAnimation;
@@ -58,8 +63,8 @@ public class PictureActivity extends Activity implements GestureDetector.OnGestu
 		sql = new MySQLite(this);
 		db = sql.getWritableDatabase();
 
-		gestureDetector = new GestureDetector(this, this);
-		inflater = LayoutInflater.from(this);
+		gestureDetector = new GestureDetector(getApplicationContext(), this);
+		inflater = LayoutInflater.from(getApplicationContext());
 
 		setAnimations();
 
@@ -82,7 +87,7 @@ public class PictureActivity extends Activity implements GestureDetector.OnGestu
     //Activity変更
     public void changeActivity(){
     	//インテントの生成
-    	Intent intent = new Intent(this,
+    	Intent intent = new Intent(getApplicationContext(),
     				vc.ddns.luna.sert.collectionbox.SheetActivity.class);
 
     	try{
@@ -98,20 +103,67 @@ public class PictureActivity extends Activity implements GestureDetector.OnGestu
     	}
     }
 
+	@Override
+	public void onDestroy(){
+		super.onDestroy();
+		destroyObjects();
+
+		db.close();
+		sql.close();
+	}
+
+	//オブジェクトの削除
+	private void destroyObjects(){
+		for(int i=0; i<imageView.length; i++){
+			cleanupView(imageView[i]);
+		}
+
+		cleanupView(viewFlipper);
+	}
+
+	//View解放
+	 public static final void cleanupView(View view) {
+		 if(view == null)
+			 return;
+
+	      if(view instanceof ImageButton) {
+	          ImageButton ib = (ImageButton)view;
+	          ib.setImageDrawable(null);
+	      } else if(view instanceof ImageView) {
+	          ImageView iv = (ImageView)view;
+	          iv.setImageDrawable(null);
+	      } else if(view instanceof SeekBar) {
+	          SeekBar sb = (SeekBar)view;
+	          sb.setProgressDrawable(null);
+	      // } else if(view instanceof( xxxx )) {  -- 他にもDrawable を使用するUIコンポーネントがあれば追加
+	      }
+
+	      view.setBackgroundDrawable(null);
+	      if(view instanceof ViewGroup) {
+	          ViewGroup vg = (ViewGroup)view;
+	          int size = vg.getChildCount();
+	          for(int i = 0; i < size; i++) {
+	              cleanupView(vg.getChildAt(i));
+	          }
+	      }
+
+	      view.setOnClickListener(null);
+	  }
+
 	//フリックによるアニメーションをセットする
 	private void setAnimations(){
 		inFromRightAnimation =
-				AnimationUtils.loadAnimation(this, R.anim.right_in);
+				AnimationUtils.loadAnimation(getApplicationContext(), R.anim.right_in);
 		inFromLeftAnimation =
-				AnimationUtils.loadAnimation(this, R.anim.left_in);
+				AnimationUtils.loadAnimation(getApplicationContext(), R.anim.left_in);
 		outToRightAnimation =
-				AnimationUtils.loadAnimation(this, R.anim.right_out);
+				AnimationUtils.loadAnimation(getApplicationContext(), R.anim.right_out);
 		outToLeftAnimation =
-				AnimationUtils.loadAnimation(this, R.anim.left_out);
+				AnimationUtils.loadAnimation(getApplicationContext(), R.anim.left_out);
 	}
 
     //データベースから読み取る
-    public void readData(){
+    private void readData(){
     	String[] pictureData = sql.searchDataBySheetNameAndType(db, sheetName, "picture");
 
     	for(int i=0; i<pictureData.length; i++){
@@ -120,17 +172,40 @@ public class PictureActivity extends Activity implements GestureDetector.OnGestu
 			pictureList.add(Uri.parse(st.nextToken()));
 		}
 
-    	for(int i=0; i<pictureList.size(); i++){
+    	for(int i=0; i<3; i++){
     		View pictureView = inflater.inflate(R.layout.picture_view_layout, null);
-    		ImageView imageView = (ImageView)pictureView.findViewById(R.id.picture_view_image);
-
-    		imageView.setImageURI(pictureList.get(i));
-
+    		imageView[i] = (ImageView)pictureView.findViewById(R.id.picture_view_image);
     		viewFlipper.addView(pictureView);
     	}
 
-    	for(int i=0; i<selectedNumber; i++)
-    		viewFlipper.showNext();
+    	viewFlipper.showNext();
+    	location = 1;
+
+    	setImageView();
+    }
+
+    //ImageViewに画像をセットする
+    private void setImageView(){
+    	int befLocation = location - 1;
+    	int nextLocation = location + 1;
+
+    	if(befLocation <= -1)
+    		befLocation = imageView.length - 1;
+    	if(nextLocation >= imageView.length)
+    		nextLocation = 0;
+
+    	if(selectedNumber - 1 == -1)
+    		imageView[befLocation].setImageURI(pictureList.get(pictureList.size() - 1));
+    	else
+    		imageView[befLocation].setImageURI(pictureList.get(selectedNumber - 1));
+
+    	imageView[location].setImageURI(pictureList.get(selectedNumber));
+
+    	if(selectedNumber + 1 == pictureList.size())
+    		imageView[nextLocation].setImageURI(pictureList.get(0));
+    	else
+    		imageView[nextLocation].setImageURI(pictureList.get(selectedNumber + 1));
+
     }
 
 	@Override
@@ -153,15 +228,20 @@ public class PictureActivity extends Activity implements GestureDetector.OnGestu
 
 		//指の移動方向及び距離の判定
 		if(dx > dy && dx > 300){
+
 			//指の左右方向の判定
 			if(e1.getX() < e2.getX()){
 				viewFlipper.setInAnimation(inFromLeftAnimation);
 				viewFlipper.setOutAnimation(outToRightAnimation);
 				viewFlipper.showPrevious();
 
+				location--;
+				if(location <= -1)
+					location = imageView.length - 1;
+
 				selectedNumber--;
 				if(selectedNumber < 0){
-					selectedNumber = viewFlipper.getChildCount() - 1;
+					selectedNumber = pictureList.size() - 1;
 				}
 
 			}else{
@@ -169,11 +249,17 @@ public class PictureActivity extends Activity implements GestureDetector.OnGestu
 				viewFlipper.setOutAnimation(outToLeftAnimation);
 				viewFlipper.showNext();
 
+				location++;
+				if(location >= imageView.length)
+					location = 0;
+
 				selectedNumber++;
-				if(selectedNumber >= viewFlipper.getChildCount()){
+				if(selectedNumber >= pictureList.size()){
 					selectedNumber = 0;
 				}
 			}
+
+			setImageView();
 
 			return true;
 		}

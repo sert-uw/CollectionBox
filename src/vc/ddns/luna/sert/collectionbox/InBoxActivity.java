@@ -40,14 +40,17 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
@@ -72,7 +75,10 @@ public class InBoxActivity extends Activity implements OnClickListener,
 
 	private LayoutInflater	inflater;//LayoutをViewとして取得する
 
-	private View[]			shLayView;//シート一覧配列
+	private View[]			setFlipperView = new View[2];
+	private int				location;//viewFlipperの場所
+
+	private String[]		data;//シートデータ
 	private int				viewSheetNumber;//表示しているViewが何番目か
 
 	//各種アニメーションオブジェクト
@@ -87,8 +93,8 @@ public class InBoxActivity extends Activity implements OnClickListener,
 		setContentView(R.layout.inbox_main_layout);
 		viewFlipper = (ViewFlipper)findViewById(R.id.inBox_viewFlipper);
 
-		gestureDetector = new GestureDetector(this, this);
-		inflater = LayoutInflater.from(this);
+		gestureDetector = new GestureDetector(getApplicationContext(), this);
+		inflater = LayoutInflater.from(getApplicationContext());
 
 		sheetNum = 0;
 
@@ -102,6 +108,15 @@ public class InBoxActivity extends Activity implements OnClickListener,
 		readSheet();
 		setAnimations();
 		setHelp();
+	}
+
+	@Override
+	public void onDestroy(){
+		super.onDestroy();
+		destroyObjects();
+
+		db.close();
+		sql.close();
 	}
 
 	//メニューの作成
@@ -131,12 +146,12 @@ public class InBoxActivity extends Activity implements OnClickListener,
 			final EditText commentView = (EditText)layoutView.findViewById(R.id.create_sheet_comment);
 			pathView = (TextView)layoutView.findViewById(R.id.create_sheet_showPath);
 
-			String nowTitle = ((TextView)shLayView[viewSheetNumber - 1].findViewById(
+			String nowTitle = ((TextView)setFlipperView[location - 1].findViewById(
 					R.id.inBox_sheetName)).getText().toString();
 			titleView.setText(nowTitle);
 			titleView.setTag(nowTitle);
 
-			commentView.setText(((TextView)shLayView[viewSheetNumber - 1].findViewById(
+			commentView.setText(((TextView)setFlipperView[location - 1].findViewById(
 					R.id.inBox_sheetComment)).getText().toString());
 
 			//dialogのボタンにイベントリスナーを適応
@@ -183,7 +198,7 @@ public class InBoxActivity extends Activity implements OnClickListener,
 										readSheet();
 
 									}else
-										toast(InBoxActivity.this, "すでに同じ名前が登録されています");
+										toast(InBoxActivity.this.getApplicationContext(), "すでに同じ名前が登録されています");
 								}
 							}
 					}
@@ -194,8 +209,8 @@ public class InBoxActivity extends Activity implements OnClickListener,
 			if(viewSheetNumber == 0)
 				break;
 
-			final TextView txView = new TextView(this);
-			txView.setText(((TextView)shLayView[viewSheetNumber - 1].findViewById(
+			final TextView txView = new TextView(getApplicationContext());
+			txView.setText(((TextView)setFlipperView[location - 1].findViewById(
 					R.id.inBox_sheetName)).getText().toString());
 			txView.setTextSize(26);
 			createDialog("このシートを削除しますか？", txView, "Delete", "cancel",
@@ -231,6 +246,7 @@ public class InBoxActivity extends Activity implements OnClickListener,
 		viewFlipper.removeAllViews();
 		viewFlipper.addView(rela);
 		viewSheetNumber = 0;
+		location = 0;
 
 		//レイアウトから読み込む
 		TextView	boxNameView	= (TextView)findViewById(R.id.inBox_boxName);
@@ -261,70 +277,87 @@ public class InBoxActivity extends Activity implements OnClickListener,
 		}
 	}
 
+	//オブジェクトの削除
+	private void destroyObjects(){
+		for(int i=0; i<setFlipperView.length; i++){
+			cleanupView(setFlipperView[i]);
+		}
+
+		cleanupView(inBoxRela);
+		cleanupView(viewFlipper);
+	}
+
+	//View解放
+	 public static final void cleanupView(View view) {
+		 if(view == null)
+			 return;
+
+	      if(view instanceof ImageButton) {
+	          ImageButton ib = (ImageButton)view;
+	          ib.setImageDrawable(null);
+	      } else if(view instanceof ImageView) {
+	          ImageView iv = (ImageView)view;
+	          iv.setImageDrawable(null);
+	      } else if(view instanceof SeekBar) {
+	          SeekBar sb = (SeekBar)view;
+	          sb.setProgressDrawable(null);
+	          sb.setThumb(null);
+	      // } else if(view instanceof( xxxx )) {  -- 他にもDrawable を使用するUIコンポーネントがあれば追加
+	      }
+
+	      view.setBackgroundDrawable(null);
+	      if(view instanceof ViewGroup) {
+	          ViewGroup vg = (ViewGroup)view;
+	          int size = vg.getChildCount();
+	          for(int i = 0; i < size; i++) {
+	              cleanupView(vg.getChildAt(i));
+	          }
+	      }
+
+	      view.setOnClickListener(null);
+	  }
+
 	//データベースからシートを読み込む
 	private void readSheet(){
 		try{
-			String[] data = sql.searchSheetByBoxName(db, boxName);
+			data = sql.searchSheetByBoxName(db, boxName);
 			if(data.length == 0)
 				return;
 
-			shLayView = new View[data.length];
 			sheetNum = data.length;
 
-			for(int i=0; i<shLayView.length; i++){
-				shLayView[i] = inflater.inflate(R.layout.inbox_sheet_layout, null);
-
-				TextView shName = (TextView)shLayView[i].findViewById(R.id.inBox_sheetName);
-				TextView shCom  = (TextView)shLayView[i].findViewById(R.id.inBox_sheetComment);
-				Button shButton = (Button)shLayView[i].findViewById(R.id.inBox_sheetOpenButton);
-
-				StringTokenizer st = new StringTokenizer(data[i], ",");
-				//読み込んだデータを適応する
-				st.nextToken();
-				shName.setText(st.nextToken());
-
-				String comment = st.nextToken();
-				if(comment.equals("  "))
-					comment = "";
-				shCom.setText(comment);
-
-				String bgImPath = st.nextToken();
-				System.out.println(bgImPath);
-				if(!bgImPath.equals("  ")){
-					Drawable bgIm = new BitmapDrawable(BitmapFactory.decodeFile(bgImPath));
-					shLayView[i].setBackgroundDrawable(bgIm);
-				}
-				shButton.setTag(shName.getText().toString());
-				shButton.setOnClickListener(this);
+			for(int i=0; i<setFlipperView.length; i++){
+				setFlipperView[i] = inflater.inflate(R.layout.inbox_sheet_layout, null);
 
 				//ViewFlipperへ追加する
-				viewFlipper.addView(shLayView[i]);
+				viewFlipper.addView(setFlipperView[i]);
 			}
+
 		}catch(Exception e){
-			System.out.println(e);
 			e.printStackTrace();
 		}
+
 	}
 
 	//フリックによるアニメーションをセットする
 	private void setAnimations(){
 		inFromRightAnimation =
-				AnimationUtils.loadAnimation(this, R.anim.right_in);
+				AnimationUtils.loadAnimation(getApplicationContext(), R.anim.right_in);
 		inFromLeftAnimation =
-				AnimationUtils.loadAnimation(this, R.anim.left_in);
+				AnimationUtils.loadAnimation(getApplicationContext(), R.anim.left_in);
 		outToRightAnimation =
-				AnimationUtils.loadAnimation(this, R.anim.right_out);
+				AnimationUtils.loadAnimation(getApplicationContext(), R.anim.right_out);
 		outToLeftAnimation =
-				AnimationUtils.loadAnimation(this, R.anim.left_out);
+				AnimationUtils.loadAnimation(getApplicationContext(), R.anim.left_out);
 	}
 
 	//説明を表示する
 	private void setHelp(){
 		if(!readSetPara()){
-			LinearLayout linear = new LinearLayout(this);
+			LinearLayout linear = new LinearLayout(getApplicationContext());
 			linear.setOrientation(LinearLayout.VERTICAL);
-			TextView textView = new TextView(this);
-			final CheckBox checkBox = new CheckBox(this);
+			TextView textView = new TextView(getApplicationContext());
+			final CheckBox checkBox = new CheckBox(getApplicationContext());
 			textView.setText(R.string.first_help_inbox_strings);
 			checkBox.setText("この説明を次回から表示しない。");
 
@@ -423,7 +456,7 @@ public class InBoxActivity extends Activity implements OnClickListener,
 										addDataToDB(title, comment, bgPath);
 
 									}else
-										toast(InBoxActivity.this, "すでに同じ名前が登録されています");
+										toast(InBoxActivity.this.getApplicationContext(), "すでに同じ名前が登録されています");
 								}
 							}
 					}
@@ -490,14 +523,14 @@ public class InBoxActivity extends Activity implements OnClickListener,
     	Intent intent = null;
     	try{
 	    	if(sheetName != null){
-	    		intent = new Intent(this,
+	    		intent = new Intent(getApplicationContext(),
 	    				vc.ddns.luna.sert.collectionbox.SheetActivity.class);
 	    		//インテントへパラメータ追加
 	    		intent.putExtra("sheetName", sheetName);
 	    		intent.putExtra("boxName", boxName);
 
 	    	}else{
-	    		intent = new Intent(this,
+	    		intent = new Intent(getApplicationContext(),
 	    				vc.ddns.luna.sert.collectionbox.MainActivity.class);
 	    	}
 
@@ -506,6 +539,37 @@ public class InBoxActivity extends Activity implements OnClickListener,
     		this.finish();
     	}catch(Exception e){
     		e.printStackTrace();
+    	}
+    }
+
+    //OutOfMemory対策の背景制御
+    private void setAndRemoveBgIm(int[] viewNumbers, int[] selectViewNumbers){
+    	for(int i=0; i<viewNumbers.length; i++){
+			TextView shName = (TextView)setFlipperView[viewNumbers[i]].findViewById(R.id.inBox_sheetName);
+			TextView shCom  = (TextView)setFlipperView[viewNumbers[i]].findViewById(R.id.inBox_sheetComment);
+			Button shButton = (Button)setFlipperView[viewNumbers[i]].findViewById(R.id.inBox_sheetOpenButton);
+
+			StringTokenizer st = new StringTokenizer(data[selectViewNumbers[i]], ",");
+			//読み込んだデータを適応する
+			st.nextToken();
+			shName.setText(st.nextToken());
+
+			String comment = st.nextToken();
+			if(comment.equals("  "))
+				comment = "";
+			shCom.setText(comment);
+
+			String bgImPath = st.nextToken();
+
+			shButton.setTag(shName.getText().toString());
+			shButton.setOnClickListener(this);
+
+	    	if(!bgImPath.equals("  ")){
+	    		Drawable bgIm = new BitmapDrawable(BitmapFactory.decodeFile(bgImPath));
+	    		setFlipperView[viewNumbers[i]].setBackgroundDrawable(bgIm);
+	    		bgIm.setCallback(null);
+	    	}else
+	    		setFlipperView[viewNumbers[i]].setBackgroundDrawable(null);
     	}
     }
 
@@ -539,23 +603,115 @@ public class InBoxActivity extends Activity implements OnClickListener,
 		if(dx > dy && dx > 300){
 			//指の左右方向の判定
 			if(e1.getX() < e2.getX()){
+
+				//以下　OutOfMemoryの対策
+				//ViewFlipperにはメインViewとシートView２つの計３つのViewのみを登録し
+				//メイン+シート数　のデータを状況に応じて適応してあたかもViewが多数あるかのように処理する
+				//フリック動作によってViewを切り替えるときに表示させるViewがメインでないにもかかわらず
+				//locationが0になる場合や、メインを表示させるのにlocationが0にならない場合は
+				//アニメーションのないView切り替えを追加で行いViewをスキップして
+				//目的のViewへ到達させる
+				int[] setView = null, selectView = null;
+				boolean Fling2Flag = false;
+
+				if(location == 0 && viewSheetNumber == 0){
+					setView = new int[]{1};
+					selectView = new int[]{data.length - 1};
+
+				}else if(location == 2){
+					if(viewSheetNumber == 1){
+						setView = new int[]{0, 1};
+						selectView = new int[]{0, 0};
+						Fling2Flag = true;
+
+					}else{
+						setView = new int[]{1, 0};
+						selectView = new int[]{viewSheetNumber - 1, viewSheetNumber-2};
+					}
+
+				}else{
+					if(viewSheetNumber == 1){
+						setView = new int[]{0};
+						selectView = new int[]{0};
+
+					}else{
+						setView = new int[]{0, 1};
+						selectView = new int[]{viewSheetNumber - 1, viewSheetNumber-2};
+						Fling2Flag = true;
+					}
+				}
+
+				setAndRemoveBgIm(setView, selectView);
+
 				viewFlipper.setInAnimation(inFromLeftAnimation);
 				viewFlipper.setOutAnimation(outToRightAnimation);
 				viewFlipper.showPrevious();
 
+				location--;
+				if(location <= -1)
+					location = 2;
+
 				viewSheetNumber--;
-				if(viewSheetNumber < 0){
-					viewSheetNumber = viewFlipper.getChildCount() - 1;
+				if(viewSheetNumber < 0)
+					viewSheetNumber = data.length;
+
+				if(Fling2Flag){
+					viewFlipper.showPrevious();
+					location--;
+					if(location <= -1)
+						location = 2;
 				}
 
 			}else{
+				int[] setView = null, selectView = null;
+				boolean Fling2Flag = false;
+
+				if(location == 0 && viewSheetNumber == 0){
+					setView = new int[]{0};
+					selectView = new int[]{0};
+
+				}else if(location == 1){
+					if(viewSheetNumber == data.length){
+						setView = new int[]{0, 1};
+						selectView = new int[]{data.length - 1, data.length - 1};
+						Fling2Flag = true;
+
+					}else{
+						setView = new int[]{0, 1};
+						selectView = new int[]{viewSheetNumber - 1, viewSheetNumber};
+					}
+
+				}else{
+					if(viewSheetNumber == data.length){
+						setView = new int[]{1};
+						selectView = new int[]{data.length - 1};
+
+					}else{
+						setView = new int[]{1, 0};
+						selectView = new int[]{viewSheetNumber - 1, viewSheetNumber};
+						Fling2Flag = true;
+					}
+				}
+
+				setAndRemoveBgIm(setView, selectView);
+
 				viewFlipper.setInAnimation(inFromRightAnimation);
 				viewFlipper.setOutAnimation(outToLeftAnimation);
 				viewFlipper.showNext();
 
+				location++;
+				if(location >= 3)
+					location = 0;
+
 				viewSheetNumber++;
-				if(viewSheetNumber >= viewFlipper.getChildCount()){
+				if(viewSheetNumber >= data.length + 1)
 					viewSheetNumber = 0;
+
+				if(Fling2Flag){
+					viewFlipper.showNext();
+					location++;
+					if(location >= 3)
+						location = 0;
 				}
 			}
 
