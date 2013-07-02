@@ -475,6 +475,14 @@ public class MusicPlayerService extends Service{
 		seekBar.setProgress(pos);
 	}
 
+	//MediaPlayerのオブジェクトが存在するかどうか
+	public boolean isExist(){
+		if(mediaPlayer != null)
+			return true;
+		else
+			return false;
+	}
+
 	//終了処理
 	public void shutdown(){
 		seekLoopFlag = false;

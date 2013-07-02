@@ -2,6 +2,7 @@ package vc.ddns.luna.sert.collectionbox;
 
 import java.util.StringTokenizer;
 
+import jp.co.cayto.appc.sdk.android.AppC;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -10,6 +11,7 @@ import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
@@ -39,6 +41,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	private MySQLite		sql;						//SQLiteオブジェクト
 	private SQLiteDatabase	db;							//データベースオブジェクト
 
+	private AppC			mAppC;						//広告用
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -47,6 +51,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		init();
 		setHelp();
 
+		mAppC = new AppC(this);
 	}
 
 	@Override
@@ -54,6 +59,23 @@ public class MainActivity extends Activity implements OnClickListener {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
 		return true;
+	}
+
+	@Override
+	protected void onResume(){
+		super.onResume();
+		//カットイン広告初期化
+		mAppC.initCutin();
+	}
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event){
+		if(keyCode == KeyEvent.KEYCODE_BACK){
+			mAppC.callCutinFinish(AppC.CUTIN_MANGA);
+			return false;
+		}
+
+		return super.onKeyDown(keyCode, event);
 	}
 
 	//初期化処理

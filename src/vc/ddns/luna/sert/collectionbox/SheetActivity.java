@@ -143,6 +143,7 @@ public class SheetActivity extends Activity implements OnClickListener{
 	@Override
 	public void onDestroy(){
 		super.onDestroy();
+		doUnbindService();
 		destroyObjects();
 
 		db.close();
@@ -1184,13 +1185,17 @@ public class SheetActivity extends Activity implements OnClickListener{
 
 	private void doUnbindService(){
 		if(mIsBound){
-			//楽曲を再生していなければサービスを停止する
-			if(mpService.isPauseMusic() || !mpService.isPlaying())
+			if(mpService.isExist()){
+				//楽曲を再生していなければサービスを停止する
+				if(mpService.isPauseMusic() || !mpService.isPlaying())
+					mpService.shutdown();
+			}else
 				mpService.shutdown();
 
 			//コネクションの解除
 			unbindService(mConnection);
 			mIsBound = false;
+			mpService = null;
 		}
 	}
 

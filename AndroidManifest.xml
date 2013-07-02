@@ -11,38 +11,81 @@
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name" android:theme="@style/AppTheme">
-
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
         <activity
             android:name="vc.ddns.luna.sert.collectionbox.MainActivity"
             android:label="@string/app_name"
-            android:theme="@android:style/Theme.NoTitleBar">
+            android:theme="@android:style/Theme.NoTitleBar" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".InBoxActivity"
-            android:theme="@android:style/Theme.NoTitleBar">
+            android:theme="@android:style/Theme.NoTitleBar" >
         </activity>
-
-	    <activity
+        <activity
             android:name=".SheetActivity"
-            android:theme="@android:style/Theme.NoTitleBar">
+            android:theme="@android:style/Theme.NoTitleBar" >
         </activity>
-
-	    <activity
+        <activity
             android:name=".PictureActivity"
-            android:theme="@android:style/Theme.NoTitleBar">
+            android:theme="@android:style/Theme.NoTitleBar" >
         </activity>
 
-	    <service android:name="MusicPlayerService"/>
+        <service android:name="MusicPlayerService" />
+
+        <!-- AppC Core Setting Start -->
+        <meta-data
+            android:name="appc_media_key"
+            android:value="7e4197fb671d99f26764c5dfc124c98932a47ac2" />
+
+        <activity
+            android:name="jp.co.cayto.appc.sdk.android.AppCAgreementActivity"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.NoTitleBar" >
+        </activity>
+        <activity
+            android:name="jp.co.cayto.appc.sdk.android.AppCWebActivity"
+            android:configChanges="fontScale|keyboard|keyboardHidden|locale|mnc|mcc|navigation|orientation|screenLayout|touchscreen"
+            android:theme="@android:style/Theme.NoTitleBar" >
+        </activity>
+
+        <service android:name="jp.co.cayto.appc.sdk.android.background.IDService" />
+        <!-- warningが出ますが android:exportedの記述はしないでください -->
+ -
+        <receiver android:name="jp.co.cayto.appc.sdk.android.background.BgAppReceiver" >
+ -
+            <intent-filter>
+                <action android:name="jp.co.cayto.appc.sdk.android.remote.command.gid.search" />
+                <action android:name="jp.co.cayto.appc.sdk.android.remote.command.gid.set" />
+                <action android:name="jp.co.cayto.appc.sdk.android.remote.command.gid.remove" />
+            </intent-filter>
+        </receiver>
+ -
+        <receiver
+            android:name="jp.co.cayto.appc.sdk.android.background.BootStrap"
+            android:enabled="true"
+            android:exported="false"
+            android:label="BootStrap" >
+ -
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_ADDED" />
+                <action android:name="android.intent.action.PACKAGE_REMOVED" />
+                <action android:name="android.intent.action.PACKAGE_REPLACED" />
+
+                <data android:scheme="package" >
+                </data>
+            </intent-filter>
+        </receiver>
+        <!-- AppC Core Setting End -->
 
     </application>
 
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
 </manifest>

@@ -4,14 +4,6 @@
     android:layout_height="match_parent"
     android:background="@color/Black" >
 
-    <ImageView
-        android:id="@+id/sheet_picture_item_imaeg1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:src="@drawable/koukoku" />
-
     <LinearLayout
         android:id="@+id/LinearLayout1"
         android:layout_width="match_parent"
@@ -45,13 +37,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/LinearLayout1"
-        android:layout_below="@+id/sheet_picture_item_imaeg1"
         android:layout_centerHorizontal="true" >
 
         <LinearLayout
             android:id="@+id/search_result_scrollLinear"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical" >
         </LinearLayout>
     </ScrollView>

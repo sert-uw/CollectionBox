@@ -11,20 +11,20 @@
         android:layout_height="match_parent"
         android:background="@drawable/background2" >
 
-        <ImageView
-            android:id="@+id/sheet_picture_item_imaeg1"
+        <jp.co.cayto.appc.sdk.android.AppCMoveIconView
+            android:id="@+id/appCView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:layout_alignParentLeft="true"
             android:layout_alignParentRight="true"
-            android:layout_alignParentTop="true"
-            android:src="@drawable/koukoku" />
+            android:layout_alignParentTop="true" />
 
         <LinearLayout
             android:id="@+id/linearLayout1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/sheet_picture_item_imaeg1"
+            android:layout_below="@+id/appCView"
             android:layout_centerHorizontal="true"
             android:gravity="center" >
 

@@ -1,8 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ViewFlipper xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/sheet_viewFlipper"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/RelativeLayout2"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/Black" >
+    android:layout_height="match_parent" >
 
-</ViewFlipper>
+    <jp.co.cayto.appc.sdk.android.AppCMoveIconView
+        android:id="@+id/appCView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_gravity="center_horizontal" />
+
+    <ViewFlipper
+        android:id="@+id/sheet_viewFlipper"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/Black"
+        android:layout_below="@+id/appCView" >
+    </ViewFlipper>
+
+</RelativeLayout>

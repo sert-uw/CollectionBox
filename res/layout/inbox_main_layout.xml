@@ -1,61 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ViewFlipper xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/inBox_viewFlipper"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/RelativeLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <RelativeLayout
-        android:id="@+id/inBox_main_rela"
+    <jp.co.cayto.appc.sdk.android.AppCMoveIconView
+        android:id="@+id/appCView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_gravity="center_horizontal" />
+
+    <ViewFlipper
+        android:id="@+id/inBox_viewFlipper"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/background2" >
-
-        <ImageView
-            android:id="@+id/sheet_picture_item_imaeg1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentTop="true"
-            android:src="@drawable/koukoku" />
+        android:layout_below="@+id/appCView" >
 
         <RelativeLayout
-            android:id="@+id/inBox_rela"
+            android:id="@+id/inBox_main_rela"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@+id/sheet_picture_item_imaeg1"
-            android:layout_centerHorizontal="true" >
+            android:background="@drawable/background2" >
 
-            <ImageView
-                android:id="@+id/inBox_boxIm"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:layout_centerVertical="true"
-                android:src="@drawable/dummy" />
+            <RelativeLayout
+                android:id="@+id/inBox_rela"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_centerHorizontal="true" >
 
-            <TextView
-                android:id="@+id/inBox_boxName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_above="@+id/inBox_boxIm"
-                android:layout_centerHorizontal="true"
-                android:layout_marginBottom="60dp"
-                android:text="BoxName"
-                android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textSize="30sp" />
+                <ImageView
+                    android:id="@+id/inBox_boxIm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:src="@drawable/dummy" />
 
-            <Button
-                android:id="@+id/inBox_createButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/inBox_boxIm"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="50dp"
-                android:tag="inBox_create"
-                android:text="Create New Sheet" />
+                <TextView
+                    android:id="@+id/inBox_boxName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_above="@+id/inBox_boxIm"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginBottom="60dp"
+                    android:text="BoxName"
+                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:textSize="30sp" />
 
+                <Button
+                    android:id="@+id/inBox_createButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/inBox_boxIm"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="50dp"
+                    android:tag="inBox_create"
+                    android:text="Create New Sheet" />
+            </RelativeLayout>
         </RelativeLayout>
+    </ViewFlipper>
 
-    </RelativeLayout>
-
-</ViewFlipper>
+</RelativeLayout>

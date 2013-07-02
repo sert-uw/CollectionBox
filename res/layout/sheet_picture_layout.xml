@@ -6,20 +6,11 @@
     android:background="@color/Black"
     android:orientation="vertical" >
 
-    <ImageView
-        android:id="@+id/sheet_picture_item_imaeg1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:src="@drawable/koukoku" />
-
     <ScrollView
         android:id="@+id/sheet_picture_scroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/LinearLayout1"
-        android:layout_below="@+id/sheet_picture_item_imaeg1" >
+        android:layout_above="@+id/LinearLayout1" >
 
         <LinearLayout
             android:id="@+id/sheet_picture_scrollLinear"
