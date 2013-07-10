@@ -328,7 +328,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
 										//image_edit_layoutをViewで取得
 										if(!pathView.getText().toString().equals("")){
-											LayoutInflater inflater = LayoutInflater.from(MainActivity.this.getApplicationContext());
+											LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
 											View imEditView = inflater.inflate(R.layout.image_edit_layout, null);
 
 											//ImageEditオブジェクトを生成しRelativeLayoutへ追加
@@ -358,7 +358,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				if(deleteFlag) {
 
 					//Dialogに表示するTextViewの生成
-					TextView text = new TextView(getApplicationContext());
+					TextView text = new TextView(this);
 
 					//TextViewのパラメータ決定
 					text.setText(boxName + "を削除しますか？");
@@ -416,7 +416,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	private void createDialog(String title, View view,
 			String ptext, String ntext,
 			DialogInterface.OnClickListener listener) {
-		AlertDialog.Builder ad = new AlertDialog.Builder(getApplicationContext());
+		AlertDialog.Builder ad = new AlertDialog.Builder(this);
 		ad.setTitle(title);
 		ad.setView(view);
 		ad.setPositiveButton(ptext, listener);
@@ -446,7 +446,7 @@ public class MainActivity extends Activity implements OnClickListener {
     //Activity変更
     public void changeActivity(String boxName){
     	//インテントの生成
-    	Intent intent = new Intent(getApplicationContext(),
+    	Intent intent = new Intent(this,
     			vc.ddns.luna.sert.collectionbox.InBoxActivity.class);
     	try{
     		//インテントへパラメータ追加

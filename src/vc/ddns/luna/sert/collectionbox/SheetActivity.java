@@ -91,7 +91,7 @@ public class SheetActivity extends Activity implements OnClickListener{
 		setContentView(R.layout.sheet_main_layout);
 		viewFlipper = (ViewFlipper)findViewById(R.id.sheet_viewFlipper);
 
-		inflater = LayoutInflater.from(getApplicationContext());
+		inflater = LayoutInflater.from(this);
 
 		//InBoxActivityからデータを引き継ぐ
 		Bundle extras = getIntent().getExtras();
@@ -104,7 +104,7 @@ public class SheetActivity extends Activity implements OnClickListener{
 		sql = new MySQLite(this);
 		db = sql.getWritableDatabase();
 
-		Intent intent = new Intent(getApplicationContext(), MusicPlayerService.class);
+		Intent intent = new Intent(this, MusicPlayerService.class);
 		if(!isServiceRunning("vc.ddns.luna.sert.collectionbox.MusicPlayerService"))
 			doStartService(intent);
 
@@ -156,10 +156,10 @@ public class SheetActivity extends Activity implements OnClickListener{
     	Intent intent;
 
     	if(number == -1)
-    		intent = new Intent(getApplicationContext(),
+    		intent = new Intent(this,
     				vc.ddns.luna.sert.collectionbox.InBoxActivity.class);
     	else
-    		intent = new Intent(getApplicationContext(),
+    		intent = new Intent(this,
     				vc.ddns.luna.sert.collectionbox.PictureActivity.class);
 
     	try{
@@ -200,33 +200,11 @@ public class SheetActivity extends Activity implements OnClickListener{
 
 	//オブジェクトの解放を行う
 	private void destroyObjects(){
-		/*cleanupView(musicView.findViewById(R.id.sheet_music_changeButton));
-		cleanupView(musicView.findViewById(R.id.sheet_music_playBack_button));
-		cleanupView(musicView.findViewById(R.id.sheet_music_rewinding_button));
-		cleanupView(musicView.findViewById(R.id.sheet_music_fastForwarding_button));
-		cleanupView(musicView.findViewById(R.id.sheet_music_shuffle_button));
-		cleanupView(musicView.findViewById(R.id.sheet_music_repeat_button));
-		cleanupView(seekBar);
-
-		cleanupView(pictureView.findViewById(R.id.sheet_music_changeButton));
-		cleanupView(pictureView.findViewById(R.id.sheet_music_playBack_button));
-		cleanupView(pictureView.findViewById(R.id.sheet_music_rewinding_button));
-		cleanupView(pictureView.findViewById(R.id.sheet_music_fastForwarding_button));*/
-
 		cleanupView(musicView);
 		cleanupView(pictureView);
 		cleanupView(searchView);
 
 		cleanupView(viewFlipper);
-
-		musicList.removeAll(musicList);
-		musicList = null;
-
-		musicPlayList.removeAll(musicPlayList);
-		musicPlayList = null;
-
-		pictureList.removeAll(pictureList);
-		pictureList = null;
 
 		musicData = null;
 		pictureData = null;
@@ -277,10 +255,10 @@ public class SheetActivity extends Activity implements OnClickListener{
 	//説明を表示する
 		private void setHelp(){
 			if(!readSetPara()){
-				LinearLayout linear = new LinearLayout(getApplicationContext());
+				LinearLayout linear = new LinearLayout(this);
 				linear.setOrientation(LinearLayout.VERTICAL);
-				TextView textView = new TextView(getApplicationContext());
-				final CheckBox checkBox = new CheckBox(getApplicationContext());
+				TextView textView = new TextView(this);
+				final CheckBox checkBox = new CheckBox(this);
 				textView.setText(R.string.first_help_sheet_strings);
 				checkBox.setText("この説明を次回から表示しない。");
 
@@ -495,12 +473,12 @@ public class SheetActivity extends Activity implements OnClickListener{
         );
 
         while( cursor.moveToNext() ){
-        	LinearLayout linear = new LinearLayout(SheetActivity.this.getApplicationContext());
+        	LinearLayout linear = new LinearLayout(SheetActivity.this);
         	linear.setOrientation(LinearLayout.VERTICAL);
 
-        	TextView titleView = new TextView(SheetActivity.this.getApplicationContext());
-        	TextView artistView = new TextView(SheetActivity.this.getApplicationContext());
-        	TextView albumView = new TextView(SheetActivity.this.getApplicationContext());
+        	TextView titleView = new TextView(SheetActivity.this);
+        	TextView artistView = new TextView(SheetActivity.this);
+        	TextView albumView = new TextView(SheetActivity.this);
 
         	titleView.setMaxLines(1);
         	artistView.setMaxLines(1);
@@ -1129,8 +1107,8 @@ public class SheetActivity extends Activity implements OnClickListener{
 			if(!mpService.setNames(boxName, sheetName)){
 				mpService.shutdown();
 				doUnbindService();
-				doStartService(new Intent(SheetActivity.this.getApplicationContext(), MusicPlayerService.class));
-				doBindService(new Intent(SheetActivity.this.getApplicationContext(), MusicPlayerService.class));
+				doStartService(new Intent(SheetActivity.this, MusicPlayerService.class));
+				doBindService(new Intent(SheetActivity.this, MusicPlayerService.class));
 				return;
 			}
 
