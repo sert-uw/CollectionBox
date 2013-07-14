@@ -46,6 +46,7 @@ public class SheetActivity extends Activity implements OnClickListener{
 
 	private boolean			receiveResultFlag;//他アプリからの結果待ちフラグ
 
+	private ViewGroup		mainViewGroup;//メインレイアウトのオブジェクト
 	private ViewFlipper 	viewFlipper;//アニメーション用Viewオブジェクト
 	private LayoutInflater	inflater;//LayoutをViewとして取得する
 
@@ -88,10 +89,12 @@ public class SheetActivity extends Activity implements OnClickListener{
 	@Override
 	protected void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.sheet_main_layout);
-		viewFlipper = (ViewFlipper)findViewById(R.id.sheet_viewFlipper);
 
 		inflater = LayoutInflater.from(this);
+
+		mainViewGroup = (ViewGroup)inflater.inflate(R.layout.sheet_main_layout, null);
+		setContentView(mainViewGroup);
+		viewFlipper = (ViewFlipper)mainViewGroup.findViewById(R.id.sheet_viewFlipper);
 
 		//InBoxActivityからデータを引き継ぐ
 		Bundle extras = getIntent().getExtras();
@@ -205,6 +208,7 @@ public class SheetActivity extends Activity implements OnClickListener{
 		cleanupView(searchView);
 
 		cleanupView(viewFlipper);
+		cleanupView(mainViewGroup);
 
 		musicData = null;
 		pictureData = null;
@@ -769,11 +773,11 @@ public class SheetActivity extends Activity implements OnClickListener{
 		            sql.upDateEntry(db, "sheetData", "dataType = ?",
 		            		new String[]{"musicSequence"}, addData);
 
-		            SheetActivity.this.setContentView(viewFlipper);
+		            SheetActivity.this.setContentView(mainViewGroup);
 		            readMusicData();
 
 				}else if(tag.equals("cancel")){
-					SheetActivity.this.setContentView(viewFlipper);
+					SheetActivity.this.setContentView(mainViewGroup);
 		            readMusicData();
 
 				}else {
@@ -817,7 +821,7 @@ public class SheetActivity extends Activity implements OnClickListener{
         }
 
         cursor.close();
-        SheetActivity.this.setContentView(searchView);
+        setContentView(searchView);
 	}
 
 	//Deleteモードの見た目切り替え
